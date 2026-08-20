@@ -1,0 +1,1193 @@
+nature computational science
+
+Brief Communication                                                                                     https://doi.org/10.1038/s43588-024-00720-6
+
+
+Deep generative design of RNA aptamers
+using structural predictions
+
+Received: 22 February 2024                            Felix Wong1,2,3,12, Dongchen He 4,5,12, Aarti Krishnan 1,2, Liang Hong4,
+                                                      Alexander Z. Wang 1,2, Jiuming Wang4, Zhihang Hu4, Satotaka Omori1,3,
+Accepted: 7 October 2024
+                                                      Alicia Li3, Jiahua Rao 6, Qinze Yu 4, Wengong Jin7,8, Tianqing Zhang2,
+Published online: 6 November 2024                     Katherine Ilia2, Jack X. Chen2, Shuangjia Zheng 9, Irwin King4,
+                                                      Yu Li 1,2,4,10,11 & James J. Collins 1,2,11
+   Check for updates
+
+
+                                                      RNAs represent a class of programmable biomolecules capable of
+                                                      performing diverse biological functions. Recent studies have developed
+                                                      accurate RNA three-dimensional structure prediction methods, which may
+                                                      enable new RNAs to be designed in a structure-guided manner. Here, we
+                                                      develop a structure-to-sequence deep learning platform for the de novo
+                                                      generative design of RNA aptamers. We show that our approach can design
+                                                      RNA aptamers that are predicted to be structurally similar, yet sequence
+                                                      dissimilar, to known light-up aptamers that fluoresce in the presence
+                                                      of small molecules. We experimentally validate several generated RNA
+                                                      aptamers to have fluorescent activity, show that these aptamers can be
+                                                      optimized for activity in silico, and find that they exhibit a mechanism
+                                                      of fluorescence similar to that of known light-up aptamers. Our results
+                                                      demonstrate how structural predictions can guide the targeted and
+                                                      resource-efficient design of new RNA sequences.
+
+
+In addition to their roles as carriers of transcriptional information, RNAs           Although the top-performing groups at the previous CASP15 com-
+perform a myriad of biologically relevant functions including catalyzing         petition for RNA 3D-structure prediction required expert knowledge
+biochemical reactions1,2, regulating transcription3, signaling4 and bind-        and fine-tuning20, several deep learning-based methods for predict-
+ing to other molecules5. RNA aptamers that bind to target molecules can          ing RNA 3D structure from sequence, including RhoFold16, trRoset-
+inhibit viral replication6, facilitate biomolecular detection7–11 and generate   taRNA17, DeepFoldRNA18 and AlphaFold 319, are now capable of being
+fluorescence12. In these contexts, the three-dimensional (3D) structures of      fully automated. While diverse approaches to RNA design focusing on
+RNA aptamers play key roles in their functions13. Deep learning methods          secondary structures, including LEARNA21 and RiboLogic22, have been
+for the accurate prediction of protein 3D structure—including AlphaFold          developed, here we hypothesized that in silico platforms predicting
+and RoseTTAFold—are now available14,15. However, deep learning meth-             RNA 3D structure can enable the structure-informed design of novel
+ods for the accurate prediction of RNA 3D structure have only recently           RNA aptamers. We tested this hypothesis by developing an approach
+emerged, due to various challenges including the relative scarcity of            for the generative design of RNAs using structural predictions (Fig. 1a).
+RNA 3D structures for training and their conformational flexibility16–19.        Given a 3D point cloud of a target structure, we aimed to solve the
+
+
+1
+ Infectious Disease and Microbiome Program, Broad Institute of MIT and Harvard, Cambridge, MA, USA. 2Institute for Medical Engineering & Science
+and Department of Biological Engineering, Massachusetts Institute of Technology, Cambridge, MA, USA. 3Integrated Biosciences, Redwood City, CA,
+USA. 4Department of Computer Science and Engineering, The Chinese University of Hong Kong, Hong Kong SAR, China. 5Shanghai Artificial Intelligence
+Laboratory, Shanghai, China. 6School of Computer Science and Engineering, Sun Yat-sen University, Guangzhou, China. 7Eric and Wendy Schmidt Center,
+Broad Institute of MIT and Harvard, Cambridge, MA, USA. 8Khoury College of Computer Sciences, Northeastern University, Boston, MA, USA.
+9
+  Global Institute of Future Technology, Shanghai Jiao Tong University, Shanghai, China. 10The CUHK Shenzhen Research Institute, Shenzhen, China.
+11
+  Wyss Institute for Biologically Inspired Engineering, Harvard University, Boston, MA, USA. 12These authors contributed equally: Felix Wong,
+Dongchen He.        e-mail: liyu@cse.cuhk.edu.hk; jimjc@mit.edu
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                    829
+Brief Communication                                                                                                                                                                                                                                                              https://doi.org/10.1038/s43588-024-00720-6
+
+
+
+    a                                                                                                                                            b
+
+
+
+
+                                                                                                                                                                                                                               Extract scalar (s) and vector (v) features
+                                                                                                                                                                                                                                                                                                                               Transformer encoder–decoder
+                                       Inverse folding                            Identify target structure                                                     PDB 3D structures                                                                                                            GVP encoder
+                                                              RNA sequence                                                                                       Example structures
+                                                                                                  PDB 6UP0:                                                                                                                                                                                  Concat Linear σ               Supervised
+                                                                                                  Input structure                                                                                                                                                                                                          end-to-end                                     Merge
+                                                                                                  of Mango-III                                                    PDB                                     PDB                                                                                                     σ+
+                                                                                                                                                                                                                                                                                s              ||.||2                      training
+                                                                                                                                                                  1F7F                                    2ZH6
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                               Transformer × N
+                                                                                                                                                                                                                                                                                                               Linear      with target
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                 self-attention
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                                  self-attention
+                                                                                                                                                                  Chain A                                 Chain A
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                  Add & norm
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                                   Add & norm
+                                  Filter on novel sequences
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                  Multi-head
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                                   Multi-head
+                                                                                                                                                                                                                                                                                                                           sequence
+                                    and similar structures                                                                                                                                                                                                                                 Linear Linear          ×
+                                                                                                                                                                                        ...
+                                                                                    Generative modeling                                                      3,435 structures from PDB                                                                                          v
+
+                                   
+                                                                                                                                                         Computationally predicted
+                                   
+                                                                                                                                                              3D structures                                                                                                                                                                       Sampling
+                                                                                                                                                                                                                                                                                    Secondary structures
+                                                                                  Experimental validation                                                                                                                                                                                                 0   1   0    0         Position-wise                              .5
+
+
+
+
+                                                                                                                                                                                        Struct module
+                                    Structural clustering                                                                                                                                                                                                                                                                         nucleotide
+
+
+
+
+                                                                                                                                                                            Rhoformer
+                                                                                                                                                                                                                                                                                                          1   0   0    0                                                    .2
+
+
+
+
+                                                                                                                                                                   RNA-FM
+                                      and optimization                                                                                                                                                                                                                                                                            distribution
+                                                                                Novel sequence
+
+
+
+
+                                                                                                  Fluorescence
+                                                                                                                                                                                                                                                                                                          0   0   0    1                                                    .2
+                                                                                  with similar                                                                                                                                                                                                                                  Sample
+                                               Fluorescence
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                            .1
+                                                                                   structure                                                                                                                                                                                                              0   0   1    0
+                                                                                                                                                                                                        pLDDT > 0.6
+                                                                              GUUACGGGGAAGGAG                                                                                                                                                                                       1GAX
+                                                                              CUAAUGCUGUGUGC...
+                                                                                                                 [RNA]                                   369,499 RhoFold-predicted                                                                                             PDB-derived or predicted RNA                 Sequence output predicted to have
+                             Cluster 1 2 3 4                  Binding score                                                                                                                                                                                                                                                       similar 3D structure
+                                                                                                                                                                 structures                                                                                                 secondary structures as contact maps
+
+
+
+    c Perplexity:                                                                                                                        d                                                                      e                                                                              f                                   g
+                                                                                                                                                       0.6                                                               0.3                                                                              23                                    20
+                                       2.43                                          2.77 4.07
+                            0.6                                                                                      20.0
+                                                         Recovery rate         TM score           RMSD
+Recovery rate or TM score
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                    15
+                            0.5                                                                                      19.5
+                                                                                                                                       Recovery rate   0.4                                                               0.2                                                                              21
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                  Perplexity
+                                                                                                                                                                                                                                                                                               RMSD (Å)
+                                                                                                                                                                                                             TM score
+                            0.4                                                                                      19.0
+                                                                                                                            RMSD (Å)
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                  10
+                            0.3                                                                                      18.5
+                                                                                                                                                       0.2                                                               0.1                                                                              19
+                            0.2                                                                                      18.0                                                                                                                                                                                                                                5
+
+                            0.1                                                                                      17.5
+
+                                                                                                                                                        0                                                                 0                                                                               17                                            0
+                             0                                                                                       17.0
+                                                                                                                                                                                                                        All components                                                        3D information only            PDB for training only
+                                                         aL a
+
+                                                        gR a
+
+
+
+
+                                                                 n
+                                                                 e
+
+
+
+
+                                                               As
+                                       n
+
+
+
+
+                                                    M G A
+                                                                c
+
+
+
+
+                                                          G A
+
+                                                               n
+
+                                                              rn
+
+                                                             Ad
+
+
+                                                              ig
+                                     ig
+
+                                               gi
+
+                                                        5 N
+
+
+                                                       5 N
+
+                                                            ar
+
+
+
+
+                                                           RN
+                                                   (0 TS )
+
+
+                                                          Le )
+                                                     .7 -R
+
+
+
+
+                                                           es
+                                                     .2 -R
+
+
+
+
+                                                           ea
+                                    es
+
+                                           lo
+
+
+
+                                                      C C
+
+
+                                                           C
+
+
+
+
+                                                           N
+
+
+
+
+                                                                                                                                                                                                                        Predicted structures for training only
+                                         bo
+
+                                                   (0 TS
+
+
+
+
+                                                        2d
+                                                        Rd
+                                  oD
+
+
+
+
+                                                       C
+                                       Ri
+
+
+
+
+                                                      et
+
+
+
+
+                                                    eM
+                              Rh
+
+
+
+
+                                               M
+
+
+
+
+                                                    M
+
+
+
+
+Fig. 1 | A deep learning approach for the 3D-structure-based generative                                                                                                            of the predicted 3D structures of the output sequences, as compared with the
+design of RNAs. a, Schematic of the approach. RhoDesign is trained on 3D RNA                                                                                                       input structure; higher is better), RMSD (lower is better) and perplexity (which
+structures predicted using a sequence-to-structure model (RhoFold), in addition                                                                                                    measures how well a model can predict a given sequence; lower is better) on a
+to available 3D RNA structures from the PDB. RhoDesign solves the problem of                                                                                                       withheld test set were used. Optimal values of these metrics, corresponding to
+producing RNA sequences whose 3D structures are predicted to approximate an                                                                                                        those calculated for perfect sequences, are 1, 0.247, 17.45 Å and 1, respectively
+input structure, and its designed sequences can be synthesized, experimentally                                                                                                     (Benchmarking metrics). Models were used out of the box with default
+validated and optimized for activity. b, Architecture of RhoDesign. 3D structural                                                                                                  parameters where applicable; for MCTS-RNA, 0.75 and 0.25 GC indicate the
+information is first encoded by a GVP encoder, and the output is combined                                                                                                          target GC content of the RNA sequence. Perplexity values are provided for
+with secondary-structure information and passed into a transformer. The                                                                                                            RhoDesign, gRNAde and RDesign, as only these models allow for its calculation.
+output of the transformer is supervised using ground-truth sequences during                                                                                                        d–g, Ablation studies. RhoDesign was evaluated on a withheld test set when
+training, and RhoDesign outputs designed RNA sequences through sampling.                                                                                                           trained using a combination of 3D- and secondary-structure information or
+c, Benchmarking RhoDesign and other models for RNA design. The recovery                                                                                                            3D-structure information only, as well as when trained using 3,435 PDB structures
+rate (which measures the fraction of nucleotides in ground-truth sequences                                                                                                         only or 369,499 RhoFold-predicted structures only.
+predicted by the model; higher is better), TM score (which measures the fidelity
+
+
+
+inverse problem of producing sets of candidate RNA sequences whose                                                                                                                 recovery rate, the TM (template modeling) score, the root-mean-square
+structures are predicted to approximately match the input structure.                                                                                                               deviation (RMSD) and the perplexity (Fig. 1c–g and ‘Benchmarking
+                                                                                                                                                                                   metrics’).
+Results                                                                                                                                                                                 When benchmarked on training–testing subsets of our train-
+A platform for the generative design of RNAs using structural                                                                                                                      ing set, we found that RhoDesign outperformed alternative models,
+predictions                                                                                                                                                                        including LEARNA20, Meta-LEARNA20, RiboLogic21, Monte Carlo tree
+Our platform, RhoDesign, builds on the heuristics and structural pre-                                                                                                              search (MCTS)-RNA27, gRNAde28, RDesign29 and eM2dRNAs (enhanced
+dictions developed as part of RhoFold16, but is generalizable across                                                                                                               M2dRNAs)30 (Fig. 1c, Supplementary Table 1 and ‘Comparison with
+different sequence-to-structure models including trRosettaRNA17,                                                                                                                   other models’). Because here the TM score and RMSD depend on
+DeepFoldRNA18 and AlphaFold 319. Here, we have focused on using                                                                                                                    RhoFold-predicted 3D structures, these metrics are bounded by imper-
+RhoFold, building on its promising performance when benchmarked                                                                                                                    fect values corresponding to fully recovered sequences, and we find
+against other sequence-to-structure models16. We first curated a set                                                                                                               that RhoDesign-generated sequences approach these bounds (Fig. 1c).
+of 369,499 RhoFold-predicted 3D RNA structures representative of                                                                                                                   Additional analyses demonstrate RhoDesign’s promising performance
+different types of RNA (Supplementary Fig. 1), as well as 3,435 3D RNA                                                                                                             in cross-fold validation experiments and suggest that inclusion of
+structures from the Protein Data Bank (PDB)23, and used these struc-                                                                                                               both the RhoFold-predicted and PDB components of the training set,
+tures along with their corresponding sequences to train a deep learning                                                                                                            as well as secondary-structure inputs, are important for improving
+model comprising a geometric vector perceptron (GVP) encoder24 and                                                                                                                 performance (Fig. 1d–g and Supplementary Table 1). Benchmarking
+a transformer module25,26 (Fig. 1b). Predicted or ground-truth second-                                                                                                             RhoDesign models trained on PDB data only, with the GVP encoder,
+ary structures corresponding to the 3D structures were provided as                                                                                                                 transformer encoder and transformer decoder modules ablated, indi-
+additional inputs to improve accuracy (‘Structure-to-sequence model’).                                                                                                             cated that each of these modules contributes to performance (Sup-
+After model training, we benchmarked the trained model using the                                                                                                                   plementary Table 2). These findings suggest the ability of the GVP and
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                                                                                                                                                                                                                                                            830
+Brief Communication                                                                                                                                                                                                                                              https://doi.org/10.1038/s43588-024-00720-6
+
+
+ a 25                                                                                  b                                                                                                                                                                                        c                  10
+                                                                                                                                                                                                                                                                                                        4
+                                                   RhoDesign                                                        1.0                                                                                                      Active                                                                                                                                   1.0
+
+
+
+
+                                                                                     Max. sequence similarity wrt
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                             Max. sequence similarity wrt
+                                                   RaptGen                                                                                                 RaptGen                                                           Inactive
+                                                                                                                    0.9
+
+
+
+
+                                                                                                                                                                                                                                                                             Fluorescence (RFU)
+RMSD wrt 6UP0 (Å)
+
+
+
+
+                    20
+
+
+
+
+                                                                                        any Mango aptamer
+                                                                                                                                                                                                                                                                                                                                                                      0.8
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                                any Mango aptamer
+                                                   Other models                                                                                                                                                                                                                                    10
+                                                                                                                                                                                                                                                                                                        3
+
+                                                                                                                    0.8
+                    15                                                                                                                                                                                                                                                                                                                                                0.6
+                                                                                                                    0.7                                                                                                                                                                                 2
+                                                                                                                                                                                                                                                                                                   10
+                    10                                                                                              0.6
+                                                                                                                                                                                                                     Other models                                                                                                                                     0.4
+                                                                                                                    0.5                                                                                                                                                                            10
+                                                                                                                                                                                                                                                                                                        1
+
+                     5                                                                                                                                           RhoDesign                                                                                                                                                                                            0.2
+                                                                                                                    0.4
+                                                                                                                                                                                                                                                                                                       0
+                    0                                                                                               0.3                                                                                                                                                                            10                                                                 0
+                     0.2   0.3   0.4   0.5   0.6   0.7     0.8        0.9                                                 0                                       20           40                         60             80           100        120
+
+
+
+
+                                                                                                                                                                                                                                                                                                         1
+
+                                                                                                                                                                                                                                                                                                        -I
+                                                                                                                                                                                                                                                                                                                            Additional active
+
+
+
+
+                                                                                                                                                                                                                                                                                             Ap U) I
+                                                                                                                                                                                                                                                                                                10 -II
+
+
+
+
+                                                                                                                                                                                                                                                                                                    go
+                                                                                                                                                                                                                                                                                                     er
+                                                                                                                                                                              Tested RNA number
+
+
+
+
+                                                                                                                                                                                                                                                                                              (A go
+                            Sequence similarity wrt 6UP0
+
+
+
+
+                                                                                                                                                                                                                                                                                                   m
+                                                                                                                                                                                                                                                                                                                        aptamers from RhoDesign
+
+
+
+
+                                                                                                                                                                                                                                                                                                 an
+                                                                                                                                                                                                                                                                                                an
+
+
+                                                                                                                                                                                                                                                                                                ta
+
+                                                                                                                                                                                                                                                                                               M
+                                                                                                                                                                                                                                                                                      M
+ d                                           e                                                                                                                                      f                                                         g
+                                 Mango-III                                                                                                                                                                           R = 0.428
+                                  (A10U)                                                                                                                                                                2.0                                                                                        Relative fluorescence wrt aptamer 1
+                                                                                                                                                                                                                                                                         5                         Max seq. sim. wrt any Mango aptamer                                      1.0
+
+
+
+
+                                                                                                                                                                                                                                             Relative fluorescence wrt
+                                                                                                                                                                                                                                                                                                   Seq. sim. wrt aptamer 1
+                                                                                                                                                                                                                                                                         4
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                                              Sequence similarity
+                                                                                                                                                                                                                                                                                                                                                                            0.8
+
+
+
+
+                                                                                                                                                                                Relative fluorescence
+                                                                                                                                                                                                        1.5
+
+
+
+
+                                                                                                                                                                                                                                                     aptamer 1
+                                                                                                                                                                                                                                                                         3                                                                                                  0.6
+
+                                                                                                                                                                                                        1.0                                                              2                                                                                                  0.4
+                                                     Apt. 3
+                                                                            Apt. 2
+                                                           Apt. 4
+                                                                                                                                                                  Cluster 1                                                                                              1                                                                                                  0.2
+                                                                                                                                                                  Cluster 2                             0.5
+                                                             Apt. 1                                                                                               Cluster 3
+                                                                                                                                                                                                                                                                         0                                                                                                   0
+                                                                                                                                                                  Cluster 4
+
+
+
+
+                                                                                                                                                                                                                                                         m 3
+                                                                                                                                                                                                                                                    Ap tam r 2
+
+
+                                                                                                                                                                                                                                                             4
+                                                                                                                                                                  Cluster 5
+                                                                                                                                                                                                                                                                                                                  Additional active aptamers
+
+
+
+
+                                                                                                                                                                                                                                                      ta er
+                                                                                                                                                                                                                                                          er
+                                                                                                                                                                                                                                                          e
+                                                                                                                                                                  Mango-I
+
+
+
+
+                                                                                                                                                                                                                                                    Ap am
+                                                                                                                                                                                                         0
+                     Aptamer 1                                                                                                                                    Mango-III
+
+
+
+
+                                                                                                                                                                                                                                                       t
+                                                                                                                                                                                                              0     0.2 0.4 0.6 0.8
+
+
+
+
+                                                                                                                                                                                                                                                    Ap
+                                                                                                                                                                  (A10U)
+                     RMSD: 4.9 Å
+                     TM score: 0.31                                                                                                                                                                               MPBind score
+                     pLDDT: 52.28
+
+ h                                                                                                                    i                                                                                                                                                                                                 j
+                                                                                                                                                                              TMPyP4                              Pyridostatin              Carboxypyridostatin                                                                                         12,000
+                                 Mango-III
+
+
+
+
+                                                                                                                                                                                                                                                                                                                            QUMA-1 fluorescence (RFU)
+                                                                                                                                                                 1.0       Aptamer 1                               1.0        Aptamer 2                1.0                        Aptamer 3
+                                  (A10U)
+                                                                                                                              Relative TO1–biotin fluorescence
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                        10,000
+                                                                                                                                                                 0.5                                               0.5                                0.5
+
+
+                                                                                                                                                                                                                                                                                                                                                        4,000
+                                                                                                                                                                  0                                                 0                                      0
+                                                                                                                                                                       0        20                            200        0        20         200                    0                             20        200
+
+                                                                                                                                                                 1.0       Aptamer 4                               1.0                                 1.0                            Random                                                            2,000
+                                                                                                                                                                                                                                                                                       36 nt
+
+                                                                                                                                                                 0.5                                               0.5                                0.5
+                    Aptamer 2            Aptamer 3            Aptamer 4                                                                                                                                                                                                                                                                                     0
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                       on t
+                                                                                                                                                                                                                                                                                                                                                                         ly
+                                                                                                                                                                                                                                                                                                                                                              Ra -III me 3
+                                                                                                                                                                                                                                                                                                                                                             an A tam r 2
+
+                                                                                                                                                                                                                                                                                                                                                                nd (A r 4
+
+                                                                                                                                                                                                                                                                                                                                                                   Dy 36 )
+                                                                                                                                                                                                                                                                                                                                                                 Ap am r 1
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                                      e n
+                                                                                                                                                                                                                                                                                                                                                                         U
+                    RMSD: 9.4 Å          RMSD: 16.3 Å         RMSD: 10.6 Å                                                                                                                                               Mango-III
+
+
+
+
+                                                                                                                                                                                                                                                                                                                                                               go pta er
+
+                                                                                                                                                                                                                                                                                                                                                                  om 10
+                                                                                                                                                                                                                                                                                                                                                                    t e
+                                                                                                                                                                                                                                                                                                                                                                       e
+                                                                                                                                                                                                                                                                                                                                                                 Ap tam
+                    TM score: 0.19       TM score: 0.13       TM score: 0.15                                                                                                                                              (A10U)
+
+                                                                                                                                                                                                                                                                                                                                                                 Ap
+                                                                                                                                                                  0                                                 0                                      0
+                    pLDDT: 39.72         pLDDT: 39.78         pLDDT: 33.64                                                                                             0        20                            200        0        20         200                     0                            20        200
+
+
+
+                                                                                                                                                                                                                                                                                                                                                           M
+                                                                                                                                                                                                                  Inhibitor concentration (µM)
+
+Fig. 2 | Experimental validation, optimization and mechanism of                                                                                                                                         d, Predicted 3D structure of aptamer 1, aligned to the ground-truth structure
+fluorescence of generated light-up RNA aptamers. a, Plot of sequence                                                                                                                                    for Mango-III in PDB 6UP0. pLDDT, predicted local distance difference test.
+similarity against predicted RMSD—used here as a starting point for measuring                                                                                                                           e, Spectral clustering using the predicted 3D structures of 10,000 RhoDesign-
+structural fidelity that is correlated with TM scores—with respect to PDB 6UP0                                                                                                                          generated sequences, in addition to the predicted 3D structures of Mango
+for 60 RhoDesign-generated aptamers, 22 RaptGen-generated aptamers and                                                                                                                                  aptamers. f, Correlation between MPBind score and relative fluorescence
+70 aptamers generated using seven other structure-to-sequence models.                                                                                                                                   intensity for the 110 designed and tested aptamers shown in b. The Pearson
+RaptGen is a variational autoencoder developed for SELEX data, which was                                                                                                                                correlation coefficient, R, is shown. g, Rank-ordered relative fluorescence of the
+trained using sequence information from Mango aptamers alone. For each set                                                                                                                              15 active aptamers from the additional 20 RNA aptamers that were synthesized
+of generated sequences, where applicable, sequences were downsampled to                                                                                                                                 and tested for TO1–biotin fluorescence induction, along with maximal sequence
+consider only those with the lowest RhoFold-predicted RMSD with respect to                                                                                                                              similarity with respect to any Mango aptamer and sequence similarity with
+Mango-III in 6UP0. Overall, the 70 aptamers generated using other structure-to-                                                                                                                         respect to aptamer 1. Fluorescence values represent one biological replicate.
+sequence models were the least sequence similar and most structurally divergent                                                                                                                         Relative fluorescence is with respect to aptamer 1 (dashed line). h, Predicted
+from Mango-III. b, Rank-ordered maximal sequence similarity with respect to                                                                                                                             3D structures of aptamers 2–4, aligned to the ground-truth structure for
+any Mango aptamer of 110 RNA aptamers synthesized and tested for TO1–biotin                                                                                                                             Mango-III in 6UP0. i, Pharmacologic inhibition of RNA fluorescence using
+fluorescence induction. c, Fluorescence and sequence similarity of active RNA                                                                                                                           three small-molecule G-quadruplex binders. Values are normalized by the
+aptamers. Fluorescence was measured for each RNA by reacting 25 µM RNA with                                                                                                                             fluorescence intensities of each RNA with no inhibitor, except for values for a
+10 µM TO1–biotin, and values represent one of two similar biological replicates.                                                                                                                        random 36-nucleotide RNA, which for comparison are normalized relative to
+Mango-III, as expected from it being a highly optimized variant of Mango-I,                                                                                                                             corresponding Mango-III values. Each value represents one biological replicate.
+exhibited about four times and about seven times brighter fluorescence than                                                                                                                             j, Detection of G-quadruplexes in active RNA aptamers using QUMA-1 dye. Bars
+did aptamer 1 and Mango-I, respectively. RFU, relative fluorescence units.                                                                                                                              represent the mean of two biological replicates (black circles).
+
+
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                                                                                                                                                                                                                                                    831
+Brief Communication                                                                                 https://doi.org/10.1038/s43588-024-00720-6
+
+transformer architectures to learn better from datasets of size similar      (Fig. 2e). This revealed that, in contrast to other generated sequences
+to those used to train other approaches.                                     based on Mango-I and Mango-III, aptamer 1 clustered more similarly
+                                                                             to Mango-III than did Mango-I, suggesting that it was sampling a struc-
+Generation and validation of fluorescent RNA aptamers                        tural space associated with high fluorescence, and that 3D structural
+Having benchmarked our model, we applied RhoDesign to generate               features conserved with Mango-III’s may underlie its activity. Test-
+RNA sequences from structures. We hypothesized that our approach             ing several approaches (‘Binding predictions’), we found that using
+could generate RNAs that are predicted to be structurally similar, but       MPBind34, a motif- and sequence-based statistical framework origi-
+sequence dissimilar, to input RNAs. Given that the structures of RNAs        nally developed to process systematic evolution of ligands by expo-
+impinge on their functions, we focused on generating fluorescent             nential enrichment (SELEX) data, to score the 110 aptamers resulted
+light-up RNA aptamers12, whose binding to small molecules allows for         in an encouraging correlation (Pearson’s R = 0.428) with fluorescence
+rapid and quantitative testing of the designed sequences. Fluorogenic        activity (Fig. 2f).
+Mango aptamers binding to TO1–biotin, a small molecule, have been                  Building on these results, we generated a set of aptamer 1 deriva-
+extensively characterized and structurally resolved in complex31,32.         tives by providing the RhoFold-predicted structure of aptamer 1 as
+As a starting point, we considered the Mango-III (A10U) aptamer in           input to RhoDesign. We sampled 5,000 RNA sequences predicted
+PDB 6UP0. This aptamer was discovered using a large-scale microflu-          to lie in a structural cluster surrounding aptamer 1, filtered the
+idic screen of variants of the original Mango aptamer, Mango-I31. We         sequences to ensure that they exhibited greater sequence similarity
+retrained RhoDesign on RNA structures to exclude structures with             with respect to aptamer 1 than any Mango aptamer, and removed low
+a sequence similarity greater than 0.5 with respect to the Mango-III         (<0.4) MPBind-scoring sequences, resulting in 1,818 candidate aptam-
+aptamer in 6UP0 to test the models’ ability to generalize. We then           ers. We then downsampled candidates on the basis of sequence by
+applied the trained models to generate 60 candidate sequences using          performing t-distributed stochastic neighbor embedding on one-hot
+the structure of 6UP0 as input, which, consistently, is well predicted       encodings and selected the highest MPBind-scoring sequence in each
+using RhoFold (Fig. 2a and Extended Data Fig. 1). From the generated         t-distributed stochastic neighbor embedding cluster, resulting in 20
+sequences, we downsampled candidates according to low predicted              RNA aptamers. Synthesizing and testing these aptamers, we found
+RMSDs and low sequence similarity with respect to the input aptamer.         that 15 of the 20 aptamers were active, and 9 of the 15 active aptamers
+This resulted in 18 aptamers with predicted RMSDs between 2.9 and            exhibited higher activity than did aptamer 1 (Fig. 2g). All active aptam-
+7.5 Å, TM scores between 0.21 and 0.39 and sequence similarity between       ers exhibited low maximal sequence similarities (<0.6) with respect to
+0.43 and 0.65 that we selected for synthesis and empirical evaluation        any Mango aptamer and high sequence similarities (>0.6) with respect
+(Fig. 2b and Supplementary Data 1). For comparison, we also synthe-          to aptamer 1 (Fig. 2g). We shortlisted the top three aptamers, aptamers
+sized and evaluated 22 and 70 similarly downsampled aptamers gener-          2–4, for further study.
+ated using RaptGen33 and seven other structure-to-sequence models,                 Aptamers 2–4 exhibited fluorescence intensities greater than that
+respectively.                                                                of aptamer 1. Their predicted 3D structures, although more structur-
+      Upon testing the synthesized aptamers for fluorescence                 ally dissimilar to Mango-III than aptamer 1’s, differed only marginally
+in the presence of TO1–biotin (10 µM), we found that 4 of the 18             (Fig. 2h and Extended Data Fig. 2), suggesting that they may fluoresce, in
+RhoDesign-generated aptamers exhibited activity, defined herein as           part, through a mechanism similar to that of Mango aptamers. Indeed,
+exhibiting fluorescence brightness of at least half that of Mango-I—a        G-quadruplexes—tertiary structures formed through self-recognition
+lenient criterion, which nevertheless robustly filters out inactive aptam-   of guanines—have been demonstrated to bind TO1 derivatives and
+ers (Fig. 2c and Supplementary Data 1). Indeed, random 36-nucleotide         other fluorescence-generating small molecules35,36. To study this
+sequences that are similar in length to the active aptamers did not          potential mechanism further, we performed experiments relying on
+exhibit any activity. Twenty of the 22 RaptGen-generated aptamers            pharmacologic inhibition of aptamers 1–4 as well as direct detection
+also exhibited activity, yet all of these had maximal sequence simi-         of G-quadruplexes using a fluorescent dye (Fig. 2i,j). Administration
+larities greater than 0.7 with respect to any Mango aptamer, indicat-        of three different G-quadruplex-selective small-molecule binders,
+ing that these sequences are largely redundant (Fig. 2b). In contrast,       TMPyP4, pyridostatin and carboxypyridostatin37–39, largely resulted
+the four active RhoDesign-generated aptamers exhibited a maximal             in competitive inhibition of TO1–biotin fluorescence in aptamers 1–4
+sequence similarity of 0.59 with respect to any Mango aptamer; of            as well as Mango-III (Fig. 2i). Reacting QUMA-1, a fluorescent probe
+these, aptamer 1 is notable in that it displayed higher fluorescence         specific to G-quadruplexes40, with aptamers 1–4 as well as Mango-III
+than did Mango-I (Fig. 2c). Only four of the 70 aptamers from the seven      resulted in substantial increases in QUMA-1 fluorescence (Fig. 2j),
+other structure-to-sequence models exhibited activity; of these, one         consistent with the potential presence of G-quadruplexes in these
+was generated by gRNAde and three were generated by MCTS-RNA.                aptamers. Together, these results indicate that aptamers 1–4, and likely
+The latter method yields a working hit rate of 30%, which is slightly        other generated aptamers, exhibit a mechanism of fluorescence similar
+higher than the working hit rate from RhoDesign (22%). However,              to that of Mango-III despite their sequence dissimilarity, consistent
+none of the four active aptamers generated by these other methods            with the notion that our approach leverages structural predictions to
+displayed substantially stronger fluorescence than did aptamer 1, and        design new RNA sequences.
+RhoDesign exhibited approximately twofold higher recovery rates than
+did MCTS-RNA in our benchmarks (Fig. 2b and Supplementary Data 1).           Discussion
+Despite its predicted structural similarity to Mango-III, aptamer 1 did      Our work provides an in silico platform for the de novo design of RNA
+not contain conserved sequence motifs that are known to underlie             sequences that leverages structural predictions and is resource effi-
+the fluorescence activity of Mango aptamers, suggesting that it might        cient (requiring the synthesis of a limited number of RNAs), which
+be an unprecedented aptamer with Mango-like activity (Fig. 2d and            contrasts with traditional time- and resource-intensive approaches
+Extended Data Fig. 1).                                                       such as SELEX41. Other platforms, including gRNAde and MCTS-RNA,
+                                                                             can contribute to the structure-guided design of active RNA aptamers,
+Optimization and mechanism of generated aptamers                             and we anticipate that integrating these methods with RhoDesign can
+To investigate aptamer 1 further, we aimed to model and optimize its         further improve the accuracy of RNA design. Given the limitations of
+fluorescence activity. To study whether the predicted 3D structure           the current benchmarking, RhoDesign will also benefit from further
+of aptamer 1 might provide insight into its function, we performed           validation using more reliable RNA 3D-structure prediction methods
+spectral clustering on the basis of 3D-aligned predicted structures          and additional experiment tests with diverse RNAs in the future.
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                 832
+Brief Communication                                                                             https://doi.org/10.1038/s43588-024-00720-6
+
+     Nevertheless, our study suggests a framework for the structure-         •   Additionally, the GVP module integrates information from
+informed design of additional aptamers, including therapeutic                    calculated dihedral angles derived from all seven atoms
+candidates5,6 and diagnostic aptamers7–11. Further work, for instance            (C4′, C1′, N1, C2, C5′, O5′, P). These dihedral angles are scalar
+in characterizing and making available more RNA 3D structures, will              quantities that capture information pertaining to the local
+improve this type of approach and extend its use to designing other              geometry of the RNA molecule and are encoded
+types of RNA with diverse functions.                                             as scalar-valued functions. These angles describe the
+                                                                                 rotational states around the backbone bonds and are invari-
+Methods                                                                          ant under rotations and translations of the backbone by
+Structure-to-sequence model                                                      construction.
+RhoDesign employs a GVP module to encode tertiary structures,                •   Combining these encodings, the resulting representation
+learning vector-valued functions from backbone coordinates and                   captures both global and local features. As output, the GVP
+scalar-valued functions from calculated dihedral angles, which capture           module produces a feature-rich representation of the input
+geometric information24. As secondary-structure constraints may                  RNA structure: namely, the scalar and vector features are
+provide useful information, RhoDesign concatenates the output of the             processed by a series of linear transformations, concatena-
+GVP encoder with the contact map derived from secondary-structure                tions and nonlinear transformations based on the L2 norm,
+information, which for PDB structures was produced using DSSR42 with             preserving equivariance and invariance of the vector and
+default settings, and for RhoFold-predicted structures was produced              scalar outputs, respectively, with respect to an arbitrary
+using RhoFold (as detailed further below). Together, these compo-                composition of rotations and reflections (as previously
+nents capture local and global structural features. RhoDesign then               shown in ref. 24). This representation is then passed as input
+employs a transformer architecture25, which may capture long-range               into a transformer module to enable sequence design.
+dependences and relationships within encoded structures, to generate
+sequences. To address the challenge posed by limited RNA structure         –– Transformer. The GVP-encoded structural features along with the
+data, we employed RhoFold16 to predict 3D structures for 369,499              contact map of the input are fed into the encoder of a transformer.
+RNAcentral sequences43 and used these structures to augment the               The transformer consists of both an encoder and a decoder, and
+training of RhoDesign (as detailed further below).                            this architecture has been appreciated to capture long-range
+     After RhoDesign was trained, sequences were generated by sam-            dependences and relationships within the encoded informa-
+pling from the predicted distributions. Specifically, we utilized the         tion25. The encoder, which processes the input representation
+torch.multinomial function for sampling. Additionally, we incorpo-            (including the GVP-encoded structural features and the contact
+rated a temperature parameter to control the diversity of the samples.        map), employs attention mechanisms to focus on relevant struc-
+For all our benchmarking tests, we employed a relatively small tem-           tural information. Notably, the attention mechanism may utilize
+perature value of 1 × 10−5, which resulted in the generation of nearly        the contact map to capture spatial dependences between base
+identical sequences for each sampling call. Hence, we sampled only            pairs. The decoder then processes the output of the encoder for
+one sequence per structure to maximize reproducibility. During the            sequence generation, operating in a step-by-step manner to pro-
+subsequent sequence design process, we were interested in sampling            duce output nucleotides.
+a diversity of sequences. To do so, we used a temperature of 1 and per-    –– Training details. Model training was performed using eight NVIDIA
+formed repeated sampling.                                                     GeForce RTX 3090 graphics processing units, and hyperparam-
+     Training for RhoDesign was performed using eight NVIDIA RTX              eters were fine-tuned to optimize model performance. The GVP
+3090 graphics processing units, and required approximately 16 h to            module was configured with the following parameters: 15 top
+complete. When generating new sequences using the trained model               K neighbors, node hidden dimensions of 256 (vector) and 512
+and a standard computer (for example, a current-generation Mac-               (scalar), edge hidden dimensions of 32 (scalar) and 1 (vector),
+Book Pro), RhoDesign exhibited an average generation time of 4.75             three encoder layers and a dropout rate of 0.1. The transformer
+sequences per second.                                                         was configured with the following parameters: three encoder
+                                                                              and decoder layers, each comprising four attention heads, and
+RhoDesign architecture and training                                           an attention dropout of 0.1. Both the encoder and decoder were
+RhoDesign is a deep learning model that enables RNA sequence design           defined using an embedding dimension of 512. The cross-entropy
+based on a fixed backbone structure. As described in the main text, the       loss function was used.
+model includes the following components.                                   –– Data. As discussed above, we leveraged experimentally deter-
+                                                                              mined structures from the PDB. We utilized DSSR42 with its default
+ –– Geometric vector perceptron. The GVP module encodes tertiary              settings to extract contact maps from the PDB structures. These
+    RNA structures. As implemented here, its architecture combines            contact maps provide information about the spatial arrangement
+    two key elements: the encoding of RNA backbone coordinates                of base pairs within RNA molecules, augmenting model learning
+    (C4′, C1′, N1) into vector-valued functions and the incorporation         of structural features. Additionally, as discussed above, to address
+    of scalar-valued functions derived from calculated dihedral angles.       the limited availability of PDB data for training our models, we lev-
+                                                                              eraged RhoFold-predicted structures for our model training. For
+   •   First, the GVP module processes backbone coordinates by                these structures, the corresponding contact maps were directly
+       learning vector-valued functions. The vector values are                generated by RhoFold.
+       derived from the directional vectors between specific atoms
+       in the backbone. For instance, the vector from the C4′ of one      Comparison with other models
+       nucleotide i to the C4′ of the next nucleotide ( C4′i to C4′i+1)   LEARNA20, Meta-LEARNA20, RiboLogic21, MCTS-RNA27, gRNAde28, RDe-
+       provides a quantity that describes the orientation of one          sign29 and eM2dRNAs30 represent different models that have been
+       part of the backbone relative to the next. We associate each       developed for the task of RNA sequence generation.
+       backbone coordinate (for example, C4′, C1′, N1) with a set of
+       such vectors, each of which is mapped by the GVP to a               –– LEARNA leverages deep reinforcement learning to optimize RNA
+       high-dimensional vector representation capturing the                   sequences by considering both secondary-structure and sequence
+       spatial arrangement of the RNA backbone.                               constraints.
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                             833
+Brief Communication                                                                                 https://doi.org/10.1038/s43588-024-00720-6
+
+ –– Meta-LEARNA extends LEARNA by leveraging meta-learning tech-              –– RMSD. The RMSD is a scalar quantity with typical units of ang-
+    niques to enhance the model’s adaptability and efficiency, enabling          stroms, which measures the average distance between atoms of
+    it to learn from previous RNA design tasks.                                  aligned structures. As with the TM score, here the RMSD is used to
+ –– RiboLogic uses riboswitch data to predict RNA sequences that                 evaluate the quality of the designed RNA sequences by comparing
+    optimize translation efficiency, leveraging secondary-structure              the predicted 3D structure of the designed RNA sequence with the
+    and function information.                                                    target input 3D structure. By definition, the optimal value of RMSD
+ –– MCTS-RNA performs inverse folding by employing a tree search                 is 0 Å; because RhoFold is used to predict 3D structures, there may
+    algorithm to search RNA sequence space and a scoring function                be a non-zero average value of RMSD arising from the difference
+    that incorporates structural and functional information.                     between RhoFold-predicted 3D structures and PDB-deposited
+ –– gRNAde is a multistate graph neural network that generates can-              structures. Empirically, we found that this value was 17.45 Å for
+    didate RNA sequences conditioned on one or more 3D backbone                  the benchmarking experiments shown in Fig. 1c.
+    structures.
+ –– RDesign uses a hierarchical representation learning framework           Benchmarking RhoDesign
+    that learns 3D structural representations through contrastive           For benchmarking, 3,435 structures and 276 structures from the
+    learning at both the cluster and sample levels.                         PDB were used for training and testing, respectively. Structures with
+ –– eM2dRNAs is a multiobjective meta-heuristic algorithm for design-       sequence similarity of >0.6 and structural similarity (TM score) of >0.2
+    ing RNA sequences relying on recursive decomposition of a target        were removed from the test set. Additionally, to ensure non-redundancy
+    structure.                                                              between the RhoFold-predicted training data and the test set, we used
+                                                                            CD-HIT45 with the lowest threshold (sequence similarity of 0.8) to
+    These models differ in their algorithms, target applications and        remove duplicates. The maximum sequence similarity between the
+the manner in which they integrate structural information to design         training and test sets was 0.514 (minimum 0.06, average 0.399), while
+RNA sequences as outputs.                                                   the maximum TM score between the training and test sets was 0.172
+                                                                            (minimum 0.013, average 0.050). Thus, our benchmarking enabled
+Benchmarking metrics                                                        us to evaluate RhoDesign’s ability to generalize. As shown in Fig. 1c
+To benchmark the performance of RhoDesign against that of other             and Supplementary Table 1, when trained and tested on these sets
+models, we used the following evaluation metrics.                           RhoDesign exhibits a recovery rate of 52.9%, outperforming other
+                                                                            models trained and tested on the same sets (whose recovery rates
+ –– Recovery rate. The recovery rate is a quantitative measure used         ranged from 23.7% to 26.1%).
+    to evaluate the effectiveness of a design method. It is calculated           In an orthogonal benchmark, we performed fivefold
+    by comparing the designed RNA sequence to the natural RNA               cross-validation after dividing the dataset on the basis of sequence
+    sequence and finding the fraction of correctly recovered nucleo-        and structural similarity. As shown in Supplementary Table 1, two sets
+    tides. A higher recovery rate indicates a more accurate and effec-      of experiments were performed where we (1) employed PSI-CD-HIT45
+    tive design method. By definition, the optimal value of recovery        for sequence clustering with a sequence similarity threshold of 0.6,
+    rate is 1.                                                              and (2) calculated the TM-score matrix using US-align46 for structure
+ –– Perplexity. Perplexity is calculated as the exponentiated average       similarity clustering with a structural similarity threshold of 0.5. Subse-
+    negative log-likelihood per sequence. Given a sequence of nucleo-       quently, the dataset of 3,711 instances was partitioned into five subsets,
+    tides s = n1n2n3…nN, the perplexity is calculated using the following   and fivefold cross-validation was performed with the training and
+    formula: perplexity(s) = P(n1n2n3… nN)−1/N, where P(n1n2n3… nN)         test sets comprising 80% and 20% of the data, respectively. Notably,
+    is the probability assigned by the model to the entire sequence         RhoDesign was the top-performing model on the basis of recovery rate
+    relative to the sequences in the reference database. Perplexity is a    and RMSD, with average sequence recovery rates of 61.7% and 63.5%
+    metric used in natural language processing (NLP) to measure how         and RMSDs of 12.704 and 13.013 Å under the sequence similarity and
+    well a language model can predict a given sequence of words. The        structure similarity conditions considered here, respectively. Intrigu-
+    metric reflects how surprised the model is when it encounters the       ingly, although underperforming in terms of recovery rate, gRNAde
+    next word in a sequence: the lower the perplexity, the better the       modestly outperformed RhoDesign in terms of TM score under the
+    model is at predicting the sequence. By definition, the optimal         structure similarity condition considered here.
+    value of perplexity is 1.
+ –– TM score. The TM score44 is a scalar quantity between 0 and 1           Ablation studies for RhoDesign
+    which measures the global similarity between two 3D struc-              In our first ablation study (Supplementary Table 1), we evaluated the
+    tures. It compares the structural alignment of two structures,          performance of RhoDesign on the fixed-backbone sequence design
+    with a higher score indicating a more similar structure. The            tasks47—in which the sequence is unknown, the structure is known
+    key components of the TM score include the alignment of cor-            and the output is the designed sequence—described in the main
+    responding residues in the compared structures, the RMSD                text using the different indicated conditions. The data used and the
+    between their positions and a length-dependent normaliza-               train–test splits were identical to those described in ‘Benchmarking
+    tion factor. In our experiments, TM score is used to evaluate           RhoDesign’, with the exception that we also investigated whether
+    the quality of the designed RNA sequences by comparing the              RhoFold-augmented data and secondary-structure information
+    predicted 3D structure of the designed RNA sequence with the            could enhance model performance. First, we compared RhoDesign
+    target input 3D structure. Because RhoFold is used to predict 3D        under three conditions: using RhoFold-augmented data only (‘pre-
+    structures, there may be a non-zero average value of TM score           dicted’), experimental data only (‘PDB’) or a combination of the two
+    arising from the difference between RhoFold-predicted 3D struc-         (‘PDB + predicted’). Incorporating RhoFold-augmented data into the
+    tures and PDB-deposited structures. Empirically, we found that          training process improved the recovery rate when compared with using
+    this value was 0.247 for the benchmarking experiments shown in          experimental data only (Fig. 1d). The RhoDesign model trained with
+    Fig. 1c. Our finding that the optimal TM score is low across all our    RhoFold-augmented data (predicted) achieved a recovery rate of 41.3%,
+    benchmarking experiments, including those shown in Supple-              while the model trained with experimental data (PDB) achieved a recov-
+    mentary Table 1, suggests that 3D-structure prediction methods          ery rate of 30% (Fig. 1d). Additionally, combining RhoFold-augmented
+    remain limited.                                                         data and experimental data resulted in the best performance, in terms
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                 834
+Brief Communication                                                                                 https://doi.org/10.1038/s43588-024-00720-6
+
+of recovery rate. The RhoDesign model trained with both PDB and pre-              Consistent with the notion that our approach captures structural
+dicted data achieved a recovery rate of 52.9% (Fig. 1d), indicating that     information that is useful for Mango-like fluorescence activity, struc-
+augmentation effectively enhances performance. Finally, we compared          tural predictions across eight tertiary-structure prediction methods
+RhoDesign models trained with only tertiary-structure information            and four secondary-structure prediction methods—including methods
+(‘3D information only’) and a combination of both tertiary-structure         not relying on deep learning—indicated that predicted structures were
+and secondary-structure information (‘All components’). Here, we used        largely robust across different prediction methods, with aptamer 1
+the combination dataset comprising predicted and PDB data to train           consistently predicted to have relatively high TM scores and low RMSD
+models with these two conditions. The results demonstrated that incor-       values with respect to Mango-III. These predictions also support the
+porating both secondary- and tertiary-structure information into the         view that aptamer 1 is more structurally similar to Mango-III than are
+model yielded better performance in terms of all metrics considered.         aptamers 2–4, and that other aptamers designed by RhoDesign largely
+Specifically, the All components model achieved the highest recovery         exhibit structural similarity to Mango-III, as measured by the TM score
+rate (52.9%) of all models considered, the highest TM score of 0.212 and     and RMSD (Supplementary Table 3). Here, to analyze the generality of
+the lowest perplexity score of 2.428.                                        structural predictions, 3D structures were predicted using SimRNA48
+     The second ablation study (Supplementary Table 2) was per-              (https://genesilico.pl/SimRNAweb), DRfold49 (https://github.com/
+formed similarly to the above, but with RhoDesign models trained             leeyang/DRfold), trRosettaRNA17 (https://yanglab.qd.sdu.edu.cn/trRo-
+on PDB data only, and with the model architecture modifications              settaRNA/), RNAComposer50 (https://rnacomposer.cs.put.poznan.pl/)
+indicated.                                                                   and RoseTTAFoldNA51 (https://github.com/uw-ipd/RoseTTAFold2NA),
+                                                                             in addition to RhoFold (https://github.com/ml4bio/RhoFold), Alpha-
+RNA 3D-structure prediction                                                  Fold 3 (https://alphafoldserver.com/) and AlphaFold 3 with the specific
+To expand the training data of RhoDesign, we utilized RhoFold16 to           ion constraints noted above (Supplementary Table 3). SimRNA uses a
+predict 3D structures from the RNAcentral45 database. Specifically,          physics-based model that simulates the RNA folding process, DRfold
+we initially predicted 3D structures for one million randomly selected       leverages end-to-end learning and deep geometrical potentials, trRo-
+RNAcentral sequences, focusing on single sequences (sequences not            settaRNA combines deep learning with Rosetta energy minimization,
+represented in higher-order structures such as RNA–protein com-              RNAComposer is a knowledge-based method that assembles RNA
+plexes) for computational tractability. To enhance the reliability of the    tertiary structures from secondary-structure motifs and RoseTTA-
+predictions, we filtered RhoFold-predicted structures on the basis of        FoldNA is a nucleic-acid-specific adaptation of RoseTTAFold15 that
+the pLDDT values (a measure of local confidence), choosing RNAcentral        uses deep learning and homology modeling. These packages were
+sequences with RhoFold-predicted pLDDT values greater than 0.6.              installed from their respective repositories and run using default set-
+This resulted in the dataset of 369,499 predicted structures used to         tings where applicable.
+train RhoDesign, as detailed above. RhoFold additionally produces                 While the results shown in Supplementary Table 3 indicate the
+predicted secondary structures as part of its initial output, and these      consistency of different sequence-to-structure prediction methods,
+secondary structures were used to augment training where indicated,          we note that the quantitative values of structural similarity found in our
+as detailed above.                                                           benchmarks are limited by the performance of structural prediction
+      We further note that, in this work, we focus on using RhoFold-         methods, and our observation that optimal values of TM score and
+predicted structures with pLDDT > 60 to balance prediction confi-            RMSD are substantially less than 1 and greater than 0 using RhoFold
+dence with the size of the resulting dataset for training RhoDesign. To      (Supplementary Table 1) suggest that improvements in the accuracy of
+study the effects of different pLDDT thresholds, we trained RhoDesign        structural predictions are needed. Importantly, RhoDesign can be used
+models using (1) all RhoFold-predicted structures with pLDDT > 80 and        and developed independently of any 3D structural prediction method,
+(2) all RhoFold-predicted structures with pLDDT > 40, two additional         and RhoDesign outperforms other methods in different benchmarks
+thresholds that subdivide the empirical distribution of all 1 million        including the recovery rate—perhaps the most appropriate metric for
+pLDDT values from RhoFold (Supplementary Fig. 1). We found that              the task of structure-guided design.
+the performance of RhoDesign, as measured by recovery rate, TM
+score and RMSD, was worse in both cases (1) and (2) when trained             RNA secondary-structure prediction
+models were applied to the same benchmarking task as in Fig. 1c              As detailed in RNA 3D-structure prediction, secondary structures are
+(Supplementary Fig. 1). In case (1), the decreased performance might         predicted as part of RhoFold’s output. Nevertheless, to optimize the
+arise due to the smaller number of structures available (34,565 as           comparison with the secondary structure of PDB 6UP0, we used Rho-
+opposed to 369,499 when pLDDT > 60). In case (2), the decreased              Fold’s implementation of Amber22 and AmberTools2352 to perform
+performance might arise due to the lower quality of the structures           additional default relaxation steps for the predicted 3D structures for
+hampering the training.                                                      each of aptamers 1–4. The secondary structures shown in Extended
+      While RhoFold was inconclusive in predicting G-quadruplexes in         Data Fig. 2 were then generated on the basis of the corresponding
+these aptamers, the presence of G-quadruplexes in several of aptamers        RhoFold-predicted relaxed 3D structures or PDB 6UP0 using the RNAp-
+1–4 may be consistent with their AlphaFold 3-predicted 3D structures         dbee 2.0 webserver53 (http://rnapdbee.cs.put.poznan.pl/). RNApdbee
+as well as their RhoFold-predicted secondary structures (Extended            annotates secondary structures of knotted and unknotted RNAs on
+Data Fig. 2). Indeed, the recent release of AlphaFold 3 details how          the basis of PDB files, utilizing a specialized algorithm to analyze 3D
+AlphaFold 3 can be used to predict 3D RNA structures19. Benchmarks           coordinates and derive structural annotations.
+of AlphaFold 3 on CASP15 natural RNA targets suggest that it performs             To analyze the generality of structural predictions, 2D structures
+similarly well to RhoFold for these targets19. Furthermore, AlphaFold        were predicted using UFold54 (https://github.com/uci-cbcl/UFold),
+3’s prediction for the 3D structure of Mango-III is nearly identical to      RNAfold55 (http://rna.tbi.univie.ac.at/cgi-bin/RNAWebSuite/RNAfold.
+6UP0, and it is possible that 6UP0 could be found in AlphaFold 3’s           cgi), MXfold256 (https://github.com/mxfold/mxfold2) and RNA-FM57
+training set (Extended Data Fig. 1). Nevertheless, using AlphaFold 3         (https://github.com/ml4bio/RNA-FM), in addition to RhoFold (Sup-
+to predict the 3D structures of aptamers 1–4 suggests the presence of        plementary Table 3). UFold is a deep learning method trained directly
+G-quadruplexes in aptamers 1, 2 and 4, as visualized in Extended Data        on annotated data and base-pairing rules, RNAfold predicts minimum
+Fig. 2. In all cases, consistent with the ions found in 6UP0, we generated   free-energy structures and base-pair probabilities, MXfold2 integrates
+AlphaFold 3 models using specific ion constraints, which included one        a deep neural network with Turner’s nearest-neighbor free-energy
+potassium ion (K+) and three magnesium ions (Mg2+).                          parameters and RNA-FM is a foundation model. These packages were
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                 835
+Brief Communication                                                                                https://doi.org/10.1038/s43588-024-00720-6
+
+installed from their respective repositories and run using default set-     sequences were downsampled to consider only those with the lowest
+tings where applicable.                                                     RhoFold-predicted RMSD with respect to Mango-III in 6UP0, as well as
+                                                                            those with at most 8 ‘C’ repeats to improve synthesizability, resulting in
+Generation of RNA sequences using RhoDesign                                 a final set of 70 sequences (10 sequences corresponding to each model).
+The 3D structure of PDB 6UP0 was provided as input to three different
+RhoDesign models, each generating 20 sequences: (1) a RhoDesign             Sequences and sequence similarity
+model trained on RNA structures excluding 6UP0 and those with a             Sequence similarity was calculated using the pairwise2.align.globalxx
+sequence similarity greater than 0.5, fixing the known ‘GUACGAAGG’          in Biopython, as the number of matches in the highest-scoring
+and ‘GUAC’ of the input sequence as a template motif, (2) a RhoDesign       alignment divided by the length of the aligned sequence. The
+model trained on RNA structures including 6UP0 without the motif con-       reference sequences used for calculating sequence similarity
+straint and (3) a RhoDesign model trained on RNA structures excluding       were as follows: GCUACGAAGGAAGGAUUGGUAUGUGGUAUAU-
+6UP0 and those with a sequence similarity greater than 0.5 and without      UCGUAGC for 6UP0 (a truncated variant of Mango-III A10U), GUAC-
+the motif constraint. A subset of resulting aptamers filtered to have       GAAGGGACGGUGCGGAGAGGAGAGUACGUGC for Mango-I,
+predicted RMSD < 7.5 Å and sequence similarity < 0.65 with respect          GUACGAAGGAGAGGAGAGGAAGAGGAGAGUACGUGC for Mango-II,
+to 6UP0 was selected for further testing, resulting in the synthesis of     GUACGAAGGAAGGAUUGGUAUGUGGUAUAUUCGUACGUGC
+five, seven and six aptamers, respectively, from each of the RhoDesign      for Mango-III, GUACGAAGGAAGGUUUGGUAUGUGGUAUAU-
+models (a total of 18 aptamers, as described in Supplementary Data 1).      UCGUACGUGC for Mango-III A10U and GUACCGAGGGAGUGGUGAG-
+      For the spectral clustering based on predicted 3D structures shown    GAUGAGGCGAGUACGUGC for Mango-IV. We note that Mango-III A10U
+in Fig. 2e, 4,000 sequences generated on the basis of the 3D structure of   is referred to as ‘Mango-III’ in this work, and the sequence for Mango-III
+PDB 6UP0 were sampled from the above set of generated sequences. To         noted above (without the A10U mutation) was used only as a reference
+account for variation in Mango aptamer structure, we similarly sampled      sequence for calculating sequence similarity. The sequences used for
+6,000 RhoDesign-generated sequences, which were generated using             aptamers 1–4 were GUUACGGGGAAGGAGCUAAUGCUGUGUGCGU-
+the RhoFold-predicted structures of Mango-I and Mango-III as inputs.        UCGUGGU, GCUACGGGGAGAGGACUAAUGCUGUAUGCGUUCGCGGC,
+      For the generation of additional aptamer candidates based             GUUACGGGGAAGGAAUCAAUGCUGUUCGUGCUUACGGC and GUU-
+on aptamer 1, the full RhoDesign model was provided with the                AUGGGGAAGGAGUCGAUGCUGUGCGCGCUUGUGGU, respectively.
+RhoFold-predicted structure of aptamer 1 as the backbone input.
+5,000 sequences were generated using RhoDesign (Supplementary               Structural clustering
+Data 1), and these sequences were downsampled for synthesis and             RhoFold was used to predict RNA 3D structures. US-align46 was used
+evaluation as described in the main text.                                   for structural alignment, producing a matrix of TM scores. Spectral
+                                                                            clustering in scikit-learn was performed on the resulting matrix, and
+Generation of RNA sequences using RaptGen                                   t-distributed stochastic neighbor embedding using default parameters
+The sequences ‘GUACGAAGGGACGGUGCGGAGAGGAGAGUAC’ and                         was used to visualize the clustering.
+‘GUACGAAGGAAGGUUUGGUAUGUGGUAUAUUCGUAC’ (truncated
+variants of Mango-I and Mango-III A10U) were provided as training           Synthesis and experimental testing of generated RNAs
+inputs. Random latent space coordinates were generated using the            Generated RNAs were synthesized by Integrated DNA Technologies and
+rand() function in MATLAB, and RaptGen33 was used to produce RNA            resuspended in TE buffer (pH 8.0). In vitro reactions were performed
+sequences with distributions similar to those of the training sequences.    on a black 384-well microplate with each RNA at a final concentra-
+RMSDs with respect to PDB 6UP0 were predicted using the correspond-         tion of 25 µM and TO1–biotin (TO1–3PEG–biotin, G955, Applied Bio-
+ing RhoFold-predicted structures for each generated sequence, and of        logical Materials) at a final concentration of 10 µM in reaction buffer
+100 sequences generated all 22 unique sequences—which had predicted         (TE buffer containing 40 mM HEPES, 100 mM KCl and 1 mM MgCl2).
+RMSD < 12 Å and sequence similarity between 0.57 and 0.87 with respect      Reactions were incubated at 37 °C for 30 min, and fluorescence was
+to 6UP0—were selected for further testing. It is important to note that     measured at Ex/Em = 475/500–550 using a SpectraMax M3 plate reader
+RaptGen was originally developed to be targeted toward SELEX applica-       (Molecular Devices) or a Promega GloMax plate reader (Promega).
+tions, and the small number of sequences used to train RaptGen in this      A length-controlled random 36-nucleotide aptamer was used as a nega-
+study may deviate from its ideal use for SELEX (in which the training set   tive control. A list of all RNA sequences synthesized for testing and cor-
+may be large, comprising thousands of sequences or more).                   responding experimental data can be found in Supplementary Data 1.
+
+Generation of RNA sequences using other                                     Binding predictions
+structure-to-sequence models                                                As discussed in the main text, in contrast to other generated sequences
+Sequences were generated from each of the seven models indicated in         based on Mango-I and Mango-III, aptamer 1 clustered more similarly
+the main text (LEARNA, Meta-LEARNA, RiboLogic, MCTS-RNA, gRNAde,            to Mango-III than did Mango-I, suggesting that it was sampling a struc-
+RDesign and eM2dRNAs) using the provided model checkpoints in               tural space associated with high fluorescence and that 3D structural
+their respective repositories, that is, https://github.com/automl/          features conserved with Mango-III’s may underlie its activity. Despite
+learna for LEARNA and Meta-LEARNA, https://github.com/wuami/                this suggestion, using sequence- and secondary-structure-based deep
+RiboLogic for RiboLogic, https://github.com/tsudalab/MCTS-RNA               learning approaches to predict TO1–biotin binding activity as an indica-
+for MCTS-RNA, https://github.com/chaitjo/geometric-rna-design for           tor of fluorescence intensity did not result in a substantial correlation
+gRNAde, https://github.com/A4Bio/RDesign for RDesign and https://           between the resulting scores and the empirically observed fluorescence
+github.com/iARN-unex/eM2dRNAs for eM2dRNAs. Default parameters              intensities across the 110 synthesized and tested aptamers (Supple-
+for each model were used without any modifications, and no addi-            mentary Fig. 2). It is possible that limitations in these methods, as
+tional tuning or parameter adjustments were performed. One hundred          opposed to substantive differences in 3D structure, underlie the lack
+sequences were sampled for each of gRNAde, RDesign, eM2dRNAs                of predictive ability, as has been suggested for molecular docking using
+and MCTS-RNA; LEARNA, Meta-LEARNA and RiboLogic are based                   AlphaFold-predicted protein structures58. Specifically, to leverage all
+on reinforcement learning and/or converged after sampling about             available information, we compiled available SELEX data for Mango
+10 sequences. Therefore, only 10 sequences were sampled from each of        aptamers (Supplementary Dataset 1 of ref. 59). We used these data
+these methods. For each set of generated sequences, where applicable,       to train four distinct models: PrismNet, DLPRB_cnn, DLPRB_rnn and
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                836
+Brief Communication                                                                                https://doi.org/10.1038/s43588-024-00720-6
+
+MPBind. For PrismNet, DLPRB_cnn and DLPRB_rnn, we used default             2.  Guerrier-Takada, C., Gardiner, K., Marsh, T., Pace, N. & Altman, S.
+settings of model architecture and model parameters provided in                The RNA moiety of ribonuclease P is the catalytic subunit of the
+their respective GitHub repositories (https://github.com/kuixu/Prism-          enzyme. Cell 35, 849–857 (1983).
+Net and https://github.com/ilanbb/dlprb). For MPBind, we used the          3. Statello, L., Guo, C.-J., Chen, L.-L. & Huarte, M. Gene regulation by
+default settings provided in the official user guide34. We found that          long non-coding RNAs and its biological functions. Nat. Rev. Mol.
+PrismNet, DLPRB_cnn and DLPRB_rnn performed worse than MPBind                  Cell Biol. 22, 96–118 (2021).
+using SELEX data when performance was measured using the Pearson           4. Dinger, M. E., Mercer, T. R. & Mattick, J. S. RNAs as extracellular
+correlation coefficient with respect to relative fluorescence intensity        signaling molecules. J. Mol. Endocrinol. 40, 151–159 (2008).
+values normalized by that of Mango-I (Supplementary Data 1). We            5. Keefe, A. D., Pai, S. & Ellington, A. Aptamers as therapeutics.
+note that MPBind was originally developed to predict SELEX-derived             Nat. Rev. Drug. Discov. 9, 537–550 (2010).
+binding aptamers: because MPBind is a meta-motif-based statistical         6. Tuerk, C., MacDougal, S. & Gold, L. RNA pseudoknots that inhibit
+framework, it may be particularly applicable and predictive when               human immunodeficiency virus type 1 reverse transcriptase.
+trained using SELEX data, which typically provide large amounts of             Proc. Natl. Acad. Sci. USA 89, 6988–6992 (1992).
+binding information relevant to specific sequence motifs.                  7. Pardee, K. et al. Rapid, low-cost detection of Zika virus using
+                                                                               programmable biomolecular components. Cell 165, 1255–1266
+Aptamer optimization                                                           (2016).
+5,000 RNA sequences were generated using the predicted structure of        8. Angenent-Mari, N. M., Garruss, A. S., Soenksen, L. R., Church, G. &
+aptamer 1 as input with a fully trained RhoDesign model, as described          Collins, J. J. A deep learning approach to programmable RNA
+in the main text. Sequences were further filtered for MPBind scores            switches. Nat. Commun. 11, 5057 (2020).
+of >0.4 (approximately that of aptamer 1) and for higher sequence          9. Valeri, J. A. et al. Sequence-to-function deep learning frameworks
+similarity with respect to aptamer 1 than any Mango aptamer (Sup-              for engineered riboregulators. Nat. Commun. 11, 5058 (2020).
+plementary Data 1).                                                        10. Takahashi, M. K. et al. A low-cost paper-based synthetic biology
+                                                                               platform for analyzing gut microbiota and host biomarkers. Nat.
+Pharmacologic inhibition of fluorescence activity                              Commun. 9, 3347 (2018).
+Three different G-quadruplex-selective small-molecule binders,             11. Green, A. A., Silver, P. A., Collins, J. J. & Yin, P. Toehold switches:
+TMPyP4, pyridostatin and carboxypyridostatin37–39, were procured               de-novo-designed regulators of gene expression. Cell 159,
+from Cayman Chemical Company and MedChemExpress and dissolved                  925–939 (2014).
+in dimethyl sulfoxide to generate working solutions. Compounds or          12. Paige, J. S., Wu, K. Y. & Jaffrey, S. R. RNA mimics of green
+vehicle (1% dimethyl sulfoxide) were then added at the indicated final         fluorescent protein. Science 333, 642–646 (2011).
+concentrations to reactions containing 10 µM of RNA aptamer and 5 µM       13. Miao, Z. & Westhof, E. RNA structure: advances and assessment of
+of TO1–biotin, under conditions similar to those described above. Reac-        3D structure prediction. Annu. Rev. Biophys. 46, 483–503 (2017).
+tions were incubated at 37 °C for 30 min, and fluorescence was meas-       14. Jumper, J. et al. Highly accurate protein structure prediction with
+ured at Ex/Em = 475/500–550 using a Promega GloMax plate reader.               AlphaFold. Nature 596, 583–589 (2021).
+                                                                           15. Baek, M. et al. Accurate prediction of protein structures and
+QUMA-1 dye fluorescence                                                        interactions using a three-track neural network. Science 373,
+For direct detection of G-quadruplexes, BioTracker QUMA-1 RNA                  871–876 (2021).
+G-quadruplex live cell dye was obtained from MilliporeSigma (SCT056),      16. Shen, T. et al. E2Efold-3D: end-to-end deep learning method for
+dissolved in dimethyl sulfoxide, and added to a final concentration            accurate de novo RNA 3D structure prediction. Preprint at
+of 10 µM to reaction buffer containing 10 µM of RNA aptamer and                https://arxiv.org/abs/2207.01586 (2022).
+no TO1–biotin. Reactions were incubated at 37 °C for 30 min, and           17. Wang, W. et al. trRosettaRNA: automated prediction of RNA 3D
+fluorescence was measured at Ex/Em = 520/660–720 using a Promega               structure with transformer network. Nat. Commun. 14, 7266
+GloMax plate reader.                                                           (2023).
+                                                                           18. Pearce, R., Li, Y., Omenn, G. S. & Zhang, Y. Fast and accurate
+Reporting summary                                                              ab initio protein structure prediction using deep learning
+Further information on research design is available in the Nature              potentials. PLoS Comput. Biol. 18, e1010539 (2022).
+Portfolio Reporting Summary linked to this article.                        19. Abramson, J. et al. Accurate structure prediction of biomolecular
+                                                                               interactions with AlphaFold 3. Nature 630, 493–500 (2024).
+Data availability                                                          20. Das, R. et al. Assessment of three-dimensional RNA structure
+The numerical data supporting the findings of this paper are provided          prediction in CASP15. Proteins 91, 1747–1770 (2023).
+in the Source Data, and the sequences can be generated by running Rho-     21. Runge, F., Stoll, D., Falkner, S. & Hutter, F. Learning to design RNA.
+Design. Source Data for Figs. 1 and 2 are available. Sequences generated       In International Conference on Learning Representations 2019
+from RhoDesign and accompanying data are available as Supplemen-               https://openreview.net/pdf?id=ByfyHh05tQ (ICLR, 2019).
+tary Data 1. The training dataset and model checkpoints for RhoDesign      22. Wu, M. J., Andreasson, J. O. L., Kladwang, W., Greenleaf, W. &
+are available from Zenodo60. The PDB structure for Mango-III (A10U),           Das, R. Automated design of diverse stand-alone riboswitches.
+6UP0, is available from the PDB61.                                             ACS Synth. Biol. 8, 1838–1846 (2019).
+                                                                           23. Berman, H. M. et al. The Protein Data Bank. Nucleic Acids Res. 28,
+Code availability                                                              235–242 (2000).
+RhoDesign is available at https://github.com/ml4bio/RhoDesign and          24. Jing, B. et al. Learning from protein structure with geometric
+from Zenodo60.                                                                 vector perceptrons. In International Conference on Learning
+                                                                               Representations https://openreview.net/pdf?id=1YLJDvSx6J4
+References                                                                     (ICLR, 2021).
+1.   Cech, T. R., Zaug, A. J. & Grabowski, P. J. In vitro splicing of      25. Vaswani, A. et al. Attention is all you need. In Advances in Neural
+     the ribosomal RNA precursor of Tetrahymena: involvement                   Information Processing Systems 5998–6008 (NIPS, 2017).
+     of a guanosine nucleotide in the excision of the intervening          26. Hsu, C. et al. Learning inverse folding from millions of predicted
+     sequence. Cell 27, 487–496 (1981).                                        structures. Proc. Mach. Learn. Res. 162, 8946–8970 (2022).
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                 837
+Brief Communication                                                                                https://doi.org/10.1038/s43588-024-00720-6
+
+27. Yang, X., Yoshizoe, K., Taneda, A. & Tsuda, K. RNA inverse folding      49. Li, Y. et al. Integrating end-to-end learning with deep geometrical
+    using Monte Carlo tree search. BMC Bioinform. 18, 468 (2017).               potentials for ab initio RNA structure prediction. Nat. Commun.
+28. Joshi, C. K. & Liò, P. gRNAde: a geometric deep learning for 3D             14, 5745 (2023).
+    RNA inverse design. Methods Mol. Biol. 2847, 121–135 (2025).            50. Biesiada, M. et al. Automated RNA 3D structure prediction with
+29. Tan, C. et al. RDesign: hierarchical data-efficient representation          RNAComposer. Methods Mol. Biol. 1490, 199–215 (2016).
+    learning for tertiary structure-based RNA design. In The Twelfth        51. Baek, M. et al. Accurate prediction of protein–nucleic acid
+    International Conference on Learning Representations (ICLR,                 complexes using RoseTTAFoldNA. Nat. Methods 21, 117–121
+    2024).                                                                      (2024).
+30. Rubio-Largo, Á., Lozano-García, N., Granado-Criado, J. &                52. Case, D. A. et al. AmberTools. J. Chem. Inf. Model. 63, 6183–6191
+    Vega-Rodríguez, M. A. Solving the RNA inverse folding problem               (2023).
+    through target structure decomposition and multiobjective               53. Zok, T. et al. RNApdbee 2.0: multifunctional tool for RNA structure
+    evolutionary computation. Appl. Soft Comput. 147, 110779 (2023).            annotation. Nucleic Acids Res. 46, W30–W35 (2018).
+31. Autour, A. et al. Fluorogenic RNA Mango aptamers for imaging            54. Fu, L. et al. UFold: fast and accurate RNA secondary structure
+    small non-coding RNAs in mammalian cells. Nat. Commun. 9, 656               prediction with deep learning. Nucleic Acids Res. 50, e14 (2022).
+    (2018).                                                                 55. Lorenz, R. et al. ViennaRNA package 2.0. Algorithms Mol. Biol. 6,
+32. Jeng, S. C. Y. et al. Fluorogenic aptamers resolve the flexibility          26 (2011).
+    of RNA junctions using orientation-dependent FRET. RNA 27,              56. Sato, K., Akiyama, M. & Sakakibara, Y. RNA secondary structure
+    433–444 (2021).                                                             prediction using deep learning with thermodynamic integration.
+33. Iwano, N. et al. Generative aptamer discovery using RaptGen.                Nat. Commun. 12, 941 (2021).
+    Nat. Comput. Sci. 2, 378–386 (2022).                                    57. Chen, J. et al. Interpretable RNA foundation model from
+34. Jiang, P. et al. MPBind: a meta-motif-based statistical framework           unannotated data for highly accurate RNA structure and function
+    and pipeline to predict binding potential of SELEX-derived                  predictions. Preprint at https://arxiv.org/abs/2204.00300 (2022).
+    aptamers. Bioinformatics 30, 2665–2667 (2014).                          58. Wong, F. et al. Benchmarking AlphaFold-enabled molecular
+35. Jeng, S. C., Chan, H. H., Booy, E. P., McKenna, S. A. & Unrau, P. J.        docking predictions for antibiotic discovery. Mol. Syst. Biol. 18,
+    Fluorophore ligand binding and complex stabilization of the RNA             e11081 (2022).
+    Mango and RNA Spinach aptamers. RNA 22, 1884–1892 (2016).               59. Trachman, R. J. III et al. Structure and functional reselection of the
+36. Trachman, R. J. III et al. Structural basis for high-affinity               Mango-III fluorogenic RNA aptamer. Nat. Chem. Biol. 15, 472–479
+    fluorophore binding and activation by RNA Mango. Nat. Chem.                 (2019).
+    Biol. 13, 807–813 (2017).                                               60. Wong, F. et al. Supporting code for: Deep generative design of
+37. Liu, L. Y., Ma, T. Z., Zeng, Y. L., Liu, W. & Mao, Z. W. Structural         RNA aptamers using structural predictions. Zenodo https://doi.org/
+    basis of pyridostatin and its derivatives specifically binding to           10.5281/zenodo.13892413 (2024).
+    G-quadruplexes. J. Am. Chem. Soc. 144, 11878–11887 (2022).              61. Trachman, R. J. & Ferre-D'Amare, A. R. Structure of the Mango-III
+38. Han, F. X., Wheelhouse, R. T. & Hurley, L. H. Interactions of TMPyP4        fluorescent aptamer bound to YO3-biotin. Protein Data Bank
+    and TMPyP2 with quadruplex DNA. Structural basis for the                    https://doi.org/10.2210/pdb6UP0/pdb (2019).
+    differential effects on telomerase inhibition. J. Am. Chem. Soc. 121,
+    3561–3570 (1999).                                                       Acknowledgements
+39. Rocca, R. et al. Molecular recognition of a carboxy pyridostatin        This work was supported by the National Institute of Allergy and
+    toward G-quadruplex structures: why does it prefer RNA?                 Infectious Diseases of the National Institutes of Health under award
+    Chem. Biol. Drug Des. 90, 919–925 (2017).                               K25AI168451 (to F.W.), the Swiss National Science Foundation under
+40. Chen, X. C. et al. Tracking the dynamic folding and unfolding of        grant number SNSF_ 203071 (to A.K.), the National Science Foundation
+    RNA G-quadruplexes in live cells. Angew. Chem. Int. Ed. Engl. 57,       Graduate Research Fellowship (to A.Z.W.), the Research Grants
+    4702–4706 (2018).                                                       Council of the Hong Kong Special Administrative Region, China
+41. Ellington, A. D. & Szostak, J. W. In vitro selection of RNA molecules   (projects CUHK 14222922 and RGC GRF 2151185 to I.K. and project
+    that bind specific ligands. Nature 346, 818–822 (1990).                 CUHK 24204023 to Y.L.), a grant from the Innovation and Technology
+42. Lu, X. J., Bussemaker, H. J. & Olson, W. K. DSSR: an integrated         Commission of the Hong Kong Special Administrative Region, China
+    software tool for dissecting the spatial structure of RNA.              (projects GHP/065/21SZ, IDBF24ENG06 and ITS/247/23FP to Y.L.), the
+    Nucleic Acids Res. 43, e142 (2015).                                     National Key R&D Program of China (project 2022ZD0160101 to Y.L.)
+43. The RNAcentral Consortium. RNAcentral: a hub of information for         and the Broad Institute of MIT and Harvard (to J.J.C.). This work is part
+    non-coding RNA sequences. Nucleic Acids Res. 47, D221–D229              of the Antibiotics-AI Project, which is directed by J.J.C. and supported
+    (2019).                                                                 by the Audacious Project, Flu Lab, LLC, the Sea Grape Foundation,
+44. Zhang, Y. & Skolnick, J. TM-align: a protein structure alignment        R. Zander and H. Wyss for the Wyss Foundation, and an anonymous
+    algorithm based on the TM-score. Nucleic Acids Res. 33,                 donor. The funders had no role in study design, data collection and
+    2302–2309 (2005).                                                       analysis, decision to publish or preparation of the manuscript.
+45. Huang, Y., Niu, B., Gao, Y., Fu, L. & Li, W. CD-HIT Suite: a web
+    server for clustering and comparing biological sequences.               Author contributions
+    Bioinformatics 26, 680–682 (2010).                                      F.W. conceived research, performed or directed all experiments,
+46. Zhang, C., Shine, M., Pyle, A. M. & Zhang, Y. US-align:                 wrote the paper and supervised research. D.H. and L.H. developed
+    universal structure alignments of proteins, nucleic acids, and          RhoDesign and performed computational analyses, with contributions
+    macromolecular complexes. Nat. Methods 19, 1109–1115                    from J.W., Z.H., Q.Y. and I.K. A.K. and A.Z.W. conceived research
+    (2022).                                                                 and performed experiments and analyses. S.O. and A.L. performed
+47. Huang, P.-S., Boyken, S. E. & Baker, D. The coming of age of            experiments. J.R., W.J., T.Z., K.I. and J.X.C. performed analyses.
+    de novo protein design. Nature 537, 320–327 (2016).                     S.Z. conceived research and performed analyses. Y.L. conceived
+48. Boniecki, M. J. et al. SimRNA: a coarse-grained method for RNA          research, performed or directed all analyses and supervised research.
+    folding simulations and 3D structure prediction. Nucleic Acids          J.J.C. conceived and supervised research. All authors assisted with
+    Res. 44, e63 (2016).                                                    manuscript editing.
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                838
+Brief Communication                                                                               https://doi.org/10.1038/s43588-024-00720-6
+
+Competing interests                                                        to the peer review of this work. Primary Handling Editor: Jie Pan, in
+J.J.C. is the founding scientific advisory board chair of Integrated       collaboration with the Nature Computational Science team.
+Biosciences. F.W. is a co-founder of Integrated Biosciences. S.O. has an   Peer reviewer reports are available.
+equity interest in Integrated Biosciences. The other authors declare no
+competing interests.                                                       Reprints and permissions information is available at
+                                                                           www.nature.com/reprints.
+Additional information
+Extended data is available for this paper at                               Publisher’s note Springer Nature remains neutral with regard
+https://doi.org/10.1038/s43588-024-00720-6.                                to jurisdictional claims in published maps and institutional
+                                                                           affiliations.
+Supplementary information The online version
+contains supplementary material available at                               Springer Nature or its licensor (e.g. a society or other partner) holds
+https://doi.org/10.1038/s43588-024-00720-6.                                exclusive rights to this article under a publishing agreement with
+                                                                           the author(s) or other rightsholder(s); author self-archiving of the
+Correspondence and requests for materials should be addressed to           accepted manuscript version of this article is solely governed by the
+Yu Li or James J. Collins.                                                 terms of such publishing agreement and applicable law.
+
+Peer review information Nature Computational Science thanks Jianyi         © The Author(s), under exclusive licence to Springer Nature America,
+Yang and the other, anonymous, reviewer(s) for their contribution          Inc. 2024
+
+
+
+
+Nature Computational Science | Volume 4 | November 2024 | 829–839                                                                                  839
+Brief Communication                                                                                           https://doi.org/10.1038/s43588-024-00720-6
+
+
+
+
+Extended Data Fig. 1 | Structural fidelity of RhoFold’s Mango-III prediction,       structure of Mango-III, aligned to the ground truth structure for Mango-III in PDB
+conserved sequence motifs in Mango aptamers, and comparison to aptamers             6UP0. b, Comparison of aptamers 1-4’s sequences against Mango sequences.
+1-4. a, (Left) RhoFold-predicted 3D structure of Mango-III, aligned to the ground   Here, conserved sequence motifs in Mango aptamers are indicated in red.
+truth structure for Mango-III in PDB 6UP0. (Right) AlphaFold 3-predicted 3D
+
+
+
+
+Nature Computational Science
+Brief Communication                                                                                    https://doi.org/10.1038/s43588-024-00720-6
+
+
+
+
+Extended Data Fig. 2 | AlphaFold 3-predicted 3D and RhoFold-predicted         ground truth structure for Mango-III in PDB 6UP0 are shown. b, Secondary
+secondary structures. a, Predicted 3D structures for aptamers 1-4 generated   structures for Mango-III and aptamers 1-4, as generated based on the
+using AlphaFold 3, as detailed in the Methods—RNA 3D structure prediction.    corresponding PDB structure (6UP0; Mango-III) or RhoFold predictions
+RMSD, TM-score, and pLDDT values for each structure as compared to the        (aptamers 1-4), as detailed in the Methods—RNA secondary structure prediction.
+
+
+
+
+Nature Computational Science
+

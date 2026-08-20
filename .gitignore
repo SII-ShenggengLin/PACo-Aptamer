@@ -1,0 +1,50 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python bytecode
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+*.egg-info/
+.pytest_cache/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Bulk data (~116G raw PDB/CIF and derived sets — kept on server only, see README) ──
+data/*
+!data/splits_v2/
+
+# ── Model weights / checkpoints (~14G — managed outside git) ──
+models/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# ── Third-party tool repos cloned with their own git remotes (see README for URLs) ──
+tools/*
+!tools/TACoAptamer/
+!tools/USalign/
+
+# ── Scratch space ──
+tmp/
+
+# Environment / secrets
+.env
+
+# Logs
+*.log
+
+# Local agent / machine config
+.claude/
+
+# Conda / virtualenv
+.conda/
+.venv/
+venv/
