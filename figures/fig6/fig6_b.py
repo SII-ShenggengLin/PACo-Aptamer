@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Fig 6b | 逐位恢复序列条(8HZD_A:native + 5 方法最优设计)。
 
-行 = native + 各方法 best-of-pool;列 = 序列位置;填色 = 与 native 一致;
+行 = native + 各方法 best sample;列 = 序列位置;填色 = 与 native 一致;
 顶部橙色带 = 界面位置(任一原子 <5 Å of N618/O2I,链 A 残基 7/8/14/15/28/29/30);
 右侧两列 = 整体恢复率 % 与界面位恢复率 %。
 单独运行:python fig6_b.py → out/fig6_b.{pdf,png}(与拼合版物理尺寸一致)
@@ -66,7 +66,7 @@ def draw(fig, gs):
     axb.set_xlim(-6.5, L + 6.5)
     axb.set_ylim(-0.3, len(rows) + 1.15)
     axb.axis("off")
-    axb.set_title("Best-of-pool designs, 8HZD_A (filled = match to native)",
+    axb.set_title("Best sample designs, 8HZD_A (filled = match to native)",
                   fontsize=5.4, pad=8)
     return axb
 

@@ -6,7 +6,7 @@
   子图单独运行与拼合后的物理尺寸完全一致 → 字号/配色天然统一。
 - 数据准备(配体=O2I/N618 荧光染料,非 5′-GDP 帽子):
   iface      链 A 中任一原子距任一 O2I 原子 <5 Å 的残基号
-  seqs       各方法最优设计(best-of-pool)及对 natA 的恢复率
+  seqs       各方法最优设计(best sample)及对 natA 的恢复率
   d_apt/d_utx/d_all/fam_* 回顾性审计数组;cs 筛选预算曲线
 """
 import os
@@ -41,7 +41,8 @@ def make_canvas():
     gs = gridspec.GridSpec(2, 16, figure=fig, **GRID_KW)
     # bottom 需容纳 panel e 悬挂于坐标区下方的 legend(约 0.9 in),
     # 否则 bbox_inches="tight" 会向下扩张画布超出 247 mm 版心高。
-    gs.update(top=(FIG_H_IN - GALLERY_H_IN - 0.4 * MM) / FIG_H_IN, bottom=0.095)
+    # 顶部预留 ~6.5 mm 给 row-0 面板(b/c)的标题,避免与画廊末行图注叠印。
+    gs.update(top=(FIG_H_IN - GALLERY_H_IN - 6.5 * MM) / FIG_H_IN, bottom=0.095)
     return fig, gs
 
 
@@ -112,7 +113,7 @@ def _load_seqs():
     gr = []
     for t in ("0.1", "0.5", "1.0"):
         gr += [l.strip() for l in open(
-            os.path.join(SUR, f"grnade_out_v2/8HZD_A.{t}.seqs")) if l.strip()]
+            os.path.join(SUR, f"grnade_out_av2_retrained_cfix/8HZD_A.{t}.seqs")) if l.strip()]
     seqs["gRNAde"] = best_seq_from_pool(gr, natA)
     nm_ = [l.strip() for l in open(os.path.join(SUR, "nampnn_out/8HZD_A.seqs"))
            if l.strip()]

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Fig 1e | 主结果预览 mini-panel:splits_v2 test 477 链五方法 pool-in-best 柱状。
+"""Fig 1e | 主结果预览 mini-panel:splits_v2 test 477 链五方法 best sample 柱状。
 
-数据:btest_v2_main_table.json(与 Fig 2c 同源,此处仅作预览)。
+数据:63_main_table_gfix.json(与 Fig 2c 同源,此处仅作预览)。
 单独运行:python fig1_e.py → out/fig1_e.{pdf,png}(与拼合版物理尺寸一致)
 """
 import numpy as np
@@ -24,11 +24,9 @@ def draw(fig, gs):
     axe.set_xticks(xe)
     axe.set_xticklabels([m.replace("-Aptamer", "") for m in METHOD_ORDER],
                         rotation=32, ha="right")
-    axe.set_ylabel("Recovery, pool-in-best (%)")
+    axe.set_ylabel("Recovery, best sample (%)")
     axe.set_title("splits_v2 test (n = 477)", fontsize=5.2, pad=3)
     axe.set_ylim(0, 92)
-    axe.text(0.97, 0.03, "preview of Fig. 2", transform=axe.transAxes,
-             fontsize=4.4, ha="right", color="#8C8C88", style="italic")
     return axe
 
 

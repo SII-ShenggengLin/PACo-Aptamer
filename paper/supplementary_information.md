@@ -63,9 +63,9 @@ A reproducibility review preceded all comparisons reported in the main text. We 
 
 **Patches to baseline codebases.** Running the four baselines (RhoDesign, gRNAde, NA-MPNN and AlignIF; Supplementary Refs. S15–S18) locally required source-level patches, all of which are documented in the released repository. (i) AlignIF: the inference FASTA writer reused the loop variable `seq`, so that on chains with PDB numbering gaps only the first of 20 samples had its placeholder underscores removed — 19 of 20 samples per such chain carried invalid `-` padding; we patched the writer (new `out_seq` variable) and reran inference in full. A second AlignIF patch maps multi-character residue names (DU, PSU and similar) that crashed sequence assembly to parent bases, and a third repairs an `argparse` `type=bool` defect that silently forced `--use_msta` on (no numerical effect on our no-MStA runs). (ii) NA-MPNN: we patched four failure modes of the official parsing stack — residues missing C1′ coordinates are silently dropped, insertion-code variants broke a unique-resnum counting step (`pdbutils.py`, mirrored in `na_data_utils.py`), uncommon residue names lacked fallback mappings, and optional `openbabel`/CIF-library dependencies were made degradable. Five test chains whose source PDBs lack C1′ coordinates (5NFV_B, 7E9I_A, 8U5J_A, 8VPV_A, 9GUT_X) cannot be repaired at the data level and are evaluated on valid positions only (difflib-aligned equal blocks; Methods of the main text). (iii) RhoDesign: NMR multi-model entries (2KGP_A, 6IZP_A) were initially fed to the model as ten-model concatenations; both chains were rerun against the canonical single-copy inputs.
 
-**The gRNAde decoding repair.** A native-likelihood diagnostic, run while assembling the perplexity column of Supplementary Table 2, exposed a vocabulary-ordering defect in our gRNAde inference harness: sampled tokens had been written out with the alphabet order A,C,G,U, whereas the model's training pipeline defines the token order A,G,C,U (`tools/gRNAde/src/constants.py`), so C and G had been interchanged at decode time (A and U are unaffected). Three independent checks established the correct order. Teacher-forced scoring of the native sequence under the retrained checkpoint favours the official order on 5 of 5 spot-checked chains (for 1D4R_A, −0.970 versus −1.121 log units per nucleotide). A paired 40-chain × 100-sample comparison at t = 0.1 gives a mean per-chain recovery advantage of +0.0199 for the official decode (25 wins, 12 losses, 3 ties). And the two decodes are related by a deterministic bijection, so the official sequences could be reconstructed exactly by interchanging C and G in the existing pools. Recomputing the cluster-based layer raised gRNAde recovery from 50.15% to 53.00% (best-of-pool) and from 31.21% to 35.77% (t = 0.1 mean), and every downstream metric was recomputed under the corrected pools (structural self-consistency 0.219 → 0.265 scTM; contact fidelity 0.391 → 0.472 scMCC; family-profile KL 4.61 → 4.66). The repair only raises gRNAde's scores, and every TACo-Aptamer lead claim over gRNAde is unchanged after it (all P ≤ 2.9 × 10⁻¹⁷). The pre-repair values are retained as a labelled reference row in the released per-chain files.
+**The gRNAde decoding repair.** A native-likelihood diagnostic, run while assembling the perplexity column of Supplementary Table 2, exposed a vocabulary-ordering defect in our gRNAde inference harness: sampled tokens had been written out with the alphabet order A,C,G,U, whereas the model's training pipeline defines the token order A,G,C,U (`tools/gRNAde/src/constants.py`), so C and G had been interchanged at decode time (A and U are unaffected). Three independent checks established the correct order. Teacher-forced scoring of the native sequence under the retrained checkpoint favours the official order on 5 of 5 spot-checked chains (for 1D4R_A, −0.970 against −1.121 log units per nucleotide). A paired 40-chain × 100-sample comparison at t = 0.1 gives a mean per-chain recovery advantage of +0.0199 for the official decode (25 wins, 12 losses, 3 ties). And the two decodes are related by a deterministic bijection, so the official sequences could be reconstructed exactly by interchanging C and G in the existing pools. Recomputing the cluster-based layer raised gRNAde recovery from 50.15% to 53.00% (best sample per chain) and from 31.21% to 35.77% (t = 0.1 mean), and every downstream metric was recomputed under the corrected pools (structural self-consistency 0.219 → 0.265 scTM; contact fidelity 0.391 → 0.472 scMCC; family-profile KL 4.61 → 4.66). The repair only raises gRNAde's scores, and every claim of a TACo-Aptamer advantage over gRNAde is unchanged after it (all P ≤ 2.9 × 10⁻¹⁷). The pre-repair values are retained as a labelled reference row in the released per-chain files.
 
-**Scoring-geometry repair in the retrospective harness.** The same review caught a second defect on our own side: the nine-atom featurization used for likelihood scoring in the retrospective analysis (Fig. 6d of the main text; the GVP encoder input representation, Supplementary Ref. S24) had filled the third coordinate slot — defined at training time as the literal N1 atom of every base — with the glycosidic N9 atom of purines, erasing the geometric signal that distinguishes purines from pyrimidines and shifting the scoring geometry off the training distribution. A 2 × 2 decomposition on 40 AptaDB chains (N1 versus N9 geometry × the two scoring checkpoints) showed that the initial, inverted result (aptamers scoring below matched random controls) was entirely due to the geometry: N1 geometry gives +2.22 and +2.11 log units for the two checkpoints, while N9 geometry gives −0.42 and −0.45. All retrospective numbers in the main text and in Supplementary Note 4 were produced after this repair.
+**Scoring-geometry repair in the retrospective harness.** The same review caught a second defect on our own side: the nine-atom featurization used for likelihood scoring in the retrospective analysis (Fig. 6d of the main text; the GVP encoder input representation, Supplementary Ref. S24) had filled the third coordinate slot — defined at training time as the literal N1 atom of every base — with the glycosidic N9 atom of purines, erasing the geometric signal that distinguishes purines from pyrimidines and shifting the scoring geometry off the training distribution. A 2 × 2 decomposition on 40 AptaDB chains (N1/N9 geometry × the two scoring checkpoints) showed that the initial, inverted result (aptamers scoring below matched random controls) was entirely due to the geometry: N1 geometry gives +2.22 and +2.11 log units for the two checkpoints, while N9 geometry gives −0.42 and −0.45. All retrospective numbers in the main text and in Supplementary Note 4 were produced after this repair.
 
 ### Supplementary Note 2: Zero-shot ligand identities and ligand-family definitions
 
@@ -186,7 +186,7 @@ at the level of individual positions.
 binding pocket at inference time improves design of the interface residues.
 On the same 115 chains we compared three conditions (30-sample pools): the
 true pocket, an empty-pocket control, and a no-ligand placebo. Scoring with
-the true pocket versus the empty pocket changes recovery by +1.04 percentage
+the true pocket against the empty pocket changes recovery by +1.04 percentage
 points (95% CI [−1.1, +3.1]; permutation p = 0.16, not significant), while the
 no-ligand placebo — a ligand token stream fed to a model variant trained
 without ligand conditioning — collapses recovery by −15.6 points, confirming
@@ -262,7 +262,7 @@ confirmation of the final configuration).
 
 **Confounder diagnostics.** Four diagnostics accompany the retrospective
 signal. D1: a length scan of random sequences shows a residual +0.003 log
-units per nucleotide length dependence after the scoring fix (versus +0.054
+units per nucleotide length dependence after the scoring fix (compared with +0.054
 before the fix), i.e. the length bias that inflated the original analysis is
 largely removed. D2: a borrowed-structure control (scoring aptamers against
 unrelated structures) degrades the signal, qualitatively confirming that the
@@ -275,7 +275,7 @@ the qualitative conclusions unchanged.
 **Relation to the N9 geometry repair.** An earlier internal version of this
 analysis, run under the pre-repair backbone geometry, produced a null or
 negative retrospective signal (N9-geometry pool: −0.42/−0.45 log units by
-source, versus +2.22/+2.11 under the repaired N1 geometry; Supplementary
+source, compared with +2.22/+2.11 under the repaired N1 geometry; Supplementary
 Note 1). The retrospective signal therefore depends on the same
 backbone-geometry correctness that underlies the structure benchmarks, and we
 report it only for the repaired pipeline.
@@ -312,7 +312,7 @@ zero-shot layer; a further 284 fragment-suspicion records are not counted.
 Because all 11 high-identity matches are also embedded matches, the
 deduplicated union of flagged constructs is 227/422 (53.8%; test layer
 178/255, 69.8%) — the main text cites this audit by the deduplicated union
-(54% of natives; 70% cluster-based, 21% temporal), and the additive per-tier
+(54% of natives; 70% cluster-based, 21% time-based), and the additive per-tier
 counting above is given for completeness. Example hits
 include construct 1Y26_X, which aligns at 0.96–0.99 identity to training
 chains ADDRSW_1M7_* and ADD71_STD with ~60 shared 12-mers. The contamination
@@ -328,11 +328,11 @@ this supplement. The audit artifacts are archived in
 
 ### Supplementary Note 6: Ensemble selection, weight-soup controls and the validation record
 
-**Variant scan.** The released model is an ensemble of two stage-2 checkpoints selected on validation data. Candidate members came from a scan of development variants — random seed, secondary-structure (SS) dropout rate, batch size, exponential moving average (EMA) of weights, and exact reruns of the base recipe — all finetuned under one identical stage-2 recipe (joint 1:1 mixing with stage-1 chains against forgetting, validation-based checkpoint selection, batch size 4, 8 epochs) and evaluated on the cluster-based test layer with pools of 300 samples (Supplementary Table 11; scan numbers use the pre-canonical manifest native caliber, which differs by at most 0.1% from the canonical caliber of Supplementary Table 2). The scan ranked the seed-43 variant and the SS-dropout-0.15 variant as the two strongest single models (71.49% and 71.45% best-of-pool; all other pre-selection variants ≤ 70.95%). The two differ in both seed and SS-dropout regularisation and occupy different stage-1 basins of the loss landscape. A later follow-up variant combining both changes (seed 43 × SS-dropout 0.15) reached 71.44% best-of-pool; it was trained after the member selection had been frozen and did not alter it, and we report it in Supplementary Table 11 for completeness. Training and ensemble decoding are implemented with the fairseq toolkit (Supplementary Ref. S25).
+**Variant scan.** The released model is an ensemble of two stage-2 checkpoints selected on validation data. Candidate members came from a scan of development variants — random seed, secondary-structure (SS) dropout rate, batch size, exponential moving average (EMA) of weights, and exact reruns of the base recipe — all finetuned under one identical stage-2 recipe (joint 1:1 mixing with stage-1 chains against forgetting, validation-based checkpoint selection, batch size 4, 8 epochs) and evaluated on the cluster-based test layer with pools of 300 samples (Supplementary Table 11; scan numbers use the pre-canonical manifest native caliber, which differs by at most 0.1% from the canonical caliber of Supplementary Table 2). The scan ranked the seed-43 variant and the SS-dropout-0.15 variant as the two strongest single models (71.49% and 71.45% for the best sample per chain; all other pre-selection variants ≤ 70.95%). The two differ in both seed and SS-dropout regularisation and occupy different stage-1 basins of the loss landscape. A later follow-up variant combining both changes (seed 43 × SS-dropout 0.15) reached 71.44% for the best sample; it was trained after the member selection had been frozen and did not alter it, and we report it in Supplementary Table 11 for completeness. Training and ensemble decoding are implemented with the fairseq toolkit (Supplementary Ref. S25).
 
-**Output-space ensembling and the validation record.** The ensemble averages the two members' stepwise softmax probability distributions before multinomial sampling — the standard ensemble-decoding operation for autoregressive sequence models, i.e. a linear opinion pool of the two stepwise distributions (Supplementary Refs. S11, S12). Pool sizes are unchanged relative to single models and the inference cost doubles, as reported in Extended Data Table 4 of the main text. Ensemble error is bounded by the mean member error minus a diversity (ambiguity) term (Supplementary Ref. S10), so gains are expected to grow precisely when members disagree. A three-member ensemble adding the third-ranked variant scored marginally higher on the cluster-based test set (75.2% versus 74.6% best-of-pool, manifest caliber) but was rejected on validation (validation best 0.8256 versus 0.8263; validation t = 0.1 mean 0.7256 versus 0.7331; the simpler two-member configuration was preferred), and test-set numbers were not used for the final configuration choice. After the interface-weighting removal (Methods of the main text), the selection was re-verified on the same 96 validation chains with the final noiface checkpoints: ens2 0.8281 > ssdo15 0.8135 > seed43 0.7954 (validation best-of-pool; t = 0.1 means 0.7384, 0.7437, 0.7343). The best single model already leads every baseline on every test layer under both recovery measures, so the ensemble is not load-bearing for any claim in the main text; its own contribution is quantified in Fig. 4a of the main text (+3.2% globally, +4.3% at the interface) and in Supplementary Table 7.
+**Output-space ensembling and the validation record.** The ensemble averages the two members' stepwise softmax probability distributions before multinomial sampling — the standard ensemble-decoding operation for autoregressive sequence models, i.e. a linear opinion pool of the two stepwise distributions (Supplementary Refs. S11, S12). Pool sizes are unchanged relative to single models and the inference cost doubles, as reported in Extended Data Table 4 of the main text. Ensemble error is bounded by the mean member error minus a diversity (ambiguity) term (Supplementary Ref. S10), so gains are expected to grow precisely when members disagree. A three-member ensemble adding the third-ranked variant scored marginally higher on the cluster-based test set (75.2% against 74.6% for the best sample, manifest caliber) but was rejected on validation (validation best 0.8256 against 0.8263; validation t = 0.1 mean 0.7256 against 0.7331; the simpler two-member configuration was preferred), and test-set numbers were not used for the final configuration choice. After the interface-weighting removal (Methods of the main text), the selection was re-verified on the same 96 validation chains with the final noiface checkpoints: ens2 0.8281 > ssdo15 0.8135 > seed43 0.7954 (validation best sample; t = 0.1 means 0.7384, 0.7437, 0.7343). The best single model already outperforms every baseline on every test layer under both recovery measures, so the ensemble is not load-bearing for any claim in the main text; its own contribution is quantified in Fig. 4a of the main text (+3.2% globally, +4.3% at the interface) and in Supplementary Table 7.
 
-**Weight-soup controls.** Weight-space averaging across these training variants degrades or fails to help: soups of two to four checkpoints scored 66.17–70.90% best-of-pool, versus 71.5% for the best single model (Supplementary Table 11). Averaging two stage-2 checkpoints that share one stage-1 basin leaves performance unchanged (70.90%), adding the SS-dropout variant degrades it (69.64%), and adding the seed-43 variant across stage-1 basins degrades it sharply (66.17%). This is the behaviour predicted by linear mode connectivity theory (Supplementary Ref. S13): independently trained networks are not connected by linear paths in weight space, so weight averaging can only succeed within a basin, whereas probability-space averaging does not require connectivity and is the operation that exploits between-basin diversity.
+**Weight-soup controls.** Weight-space averaging across these training variants degrades or fails to help: soups of two to four checkpoints scored 66.17–70.90% on the best sample, against 71.5% for the best single model (Supplementary Table 11). Averaging two stage-2 checkpoints that share one stage-1 basin leaves performance unchanged (70.90%), adding the SS-dropout variant degrades it (69.64%), and adding the seed-43 variant across stage-1 basins degrades it sharply (66.17%). This is the behaviour predicted by linear mode connectivity theory (Supplementary Ref. S13): independently trained networks are not connected by linear paths in weight space, so weight averaging can only succeed within a basin, whereas probability-space averaging does not require connectivity and is the operation that exploits between-basin diversity.
 
 ### Supplementary Note 7: Baseline retraining and inference protocol
 
@@ -340,7 +340,7 @@ this supplement. The audit artifacts are archived in
 
 **Official procedures and checkpoint selection.** RhoDesign was trained with a custom loop around the official model code, selecting the checkpoint `best_val.pth` by validation recovery. gRNAde was trained with the official `main.py` loop on the official-style three-file inputs, selecting `best_checkpoint.h5` by validation. NA-MPNN was trained with official hyperparameters (hidden dimension 128, 3 + 3 encoder/decoder layers, k = 32 neighbours, Noam schedule, label smoothing 0.1, automatic mixed precision, BATCH_TOKENS 6000, TOTAL_STEPS 20000 run to completion); all 21 saved checkpoints were evaluated on validation and `s_11016.pt` was selected (epoch 153, validation top-1 accuracy 0.6771). AlignIF was trained for the full 80 epochs of its official schedule (validation loss 0.880 → 0.697) and the epoch-79 checkpoint was used.
 
-**Inference pools and scoring conventions.** For benchmark inference, every method conditions only on the backbone and the predicted secondary structure — TACo-Aptamer included, the ligand context having acted during finetuning (see Supplementary Note 3 for the inference-time pocket-injection control). Pools follow the official inference defaults of each method at identical intent: three temperatures (0.1, 0.5, 1.0) × 100 sequences for TACo-Aptamer, RhoDesign and gRNAde, with RhoDesign down-sampling long chains per its official rule (50 per temperature above 200 nt, 30 above 400 nt); t = 0.1 × 20 for AlignIF (run without MStA retrieval, matching the input parity of the other methods) and t = 0.1 × 10 for NA-MPNN. Best-of-pool therefore mildly disadvantages the two small-pool methods, and the t = 0.1 mean is reported alongside precisely to control for pool size (Fig. 2b,c of the main text). Outputs shorter than the native sequence (the five NA-MPNN chains of Supplementary Note 1; AlignIF positions returned as dashes) are aligned by equal-block matching and scored on valid positions only, with N positions excluded from all denominators. The identical protocol was carried over unchanged to the predicted-backbone benchmark (Supplementary Figure 8; Supplementary Table 8) and the efficiency probes (Supplementary Figure 9; Supplementary Table 9).
+**Inference pools and scoring conventions.** For benchmark inference, every method conditions only on the backbone and the predicted secondary structure — TACo-Aptamer included, the ligand context having acted during finetuning (see Supplementary Note 3 for the inference-time pocket-injection control). Pools follow the official inference defaults of each method at identical intent: three temperatures (0.1, 0.5, 1.0) × 100 sequences for TACo-Aptamer, RhoDesign and gRNAde, with RhoDesign down-sampling long chains per its official rule (50 per temperature above 200 nt, 30 above 400 nt); t = 0.1 × 20 for AlignIF (run without MStA retrieval, matching the input parity of the other methods) and t = 0.1 × 10 for NA-MPNN. Comparing best samples therefore mildly disadvantages the two small-pool methods, and the t = 0.1 mean is reported alongside precisely to control for pool size (Fig. 2b,c of the main text). Outputs shorter than the native sequence (the five NA-MPNN chains of Supplementary Note 1; AlignIF positions returned as dashes) are aligned by equal-block matching and scored on valid positions only, with N positions excluded from all denominators. The identical protocol was carried over unchanged to the predicted-backbone benchmark (Supplementary Figure 8; Supplementary Table 8) and the efficiency probes (Supplementary Figure 9; Supplementary Table 9).
 
 The supplementary figures collect the per-chain and per-family characterisations of these benchmark pools: cross-method confidence coupling (Supplementary Figure 2), native-sequence likelihood (Supplementary Figure 3), ligand-family stratification (Supplementary Figure 4), the fingerprint robustness of the zero-shot advantage (Supplementary Figure 5; Supplementary Table 4), the family-holdout retraining experiments (Supplementary Table 5), interface consensus composition (Supplementary Figure 6), the two fold-fidelity axes (Supplementary Figure 7), predicted-backbone transfer (Supplementary Figure 8; Supplementary Table 8), inference efficiency (Supplementary Figure 9; Supplementary Table 9), the temperature–diversity scan (Supplementary Figure 10) and the conditioning-channel perturbations detailed in Supplementary Note 3 (Supplementary Figure 11).
 
@@ -348,7 +348,7 @@ The supplementary figures collect the per-chain and per-family characterisations
 
 **Supplementary Figure 1. Corpus composition and split diagnostics.** (A)
 Chain counts per evaluation layer: 5,773 training, 96 validation, 477
-cluster-hold-out test, 235 temporal-hold-out, and 93 zero-shot-ligand chains;
+cluster-hold-out test, 235 time-based hold-out, and 93 zero-shot-ligand chains;
 the stage-2 finetuning pool of 768 chains (510 PDB entries) is shown for
 context. (B) Chain-length distributions per layer; medians are 71, 58, 43, 37, and 45
 nt respectively (sequences as archived in `data/splits_v2/seqs_all.fasta`). (C) Family stratification of the 477-chain test layer: nine
@@ -373,7 +373,7 @@ TACo-Aptamer, 0.685 [0.634, 0.732] for AlignIF, 0.175 [0.079, 0.277] for
 RhoDesign, and 0.683 [0.625, 0.734] for NA-MPNN (gRNAde not applicable — see
 below). (B) Within-chain (sample-level) confidence is weakly informative
 for TACo-Aptamer only: mean within-chain correlation 0.193 (median 0.196;
-83.6% of 477 chains positive), versus 0.009 for AlignIF (51.2% of 441 valid
+83.6% of 477 chains positive), against 0.009 for AlignIF (51.2% of 441 valid
 chains positive) and 0.018 for RhoDesign (49.0% of 451 valid chains positive,
 18 degenerate pools excluded); NA-MPNN pools (10 samples) fall below the
 30-sample minimum and are shown descriptively only (0.020). (C) The top-10% enrichment — mean recovery of
@@ -396,7 +396,7 @@ autoregressive model: macro-averaged perplexity is 2.911 for TACo-Aptamer
 (mean native log probability −0.9975, n = 477), 3.016 for gRNAde (−1.0970),
 3.401 for NA-MPNN (−1.1589), and 3.450 for RhoDesign (−1.1494); AlignIF does
 not produce calibrated per-residue probabilities and is shown as "-". (B)
-Perplexity versus best-recovery scatter per chain; designed-pool mean
+Perplexity against best-recovery scatter per chain; designed-pool mean
 log probabilities of the top-10% most confident designs are −0.896 (gRNAde), −0.341
 (NA-MPNN), and −0.244 (RhoDesign), and RhoDesign pools exhibit extremely low
 diversity (e.g. chain 1D4R_A: 100/100 identical designs), which inflates its
@@ -405,7 +405,7 @@ self-confidence without improving recovery. Data source:
 archived 77-pool scoring runs.
 
 **Supplementary Figure 4. Per-family recovery on the cluster hold-out.**
-Best-of-pool and t = 0.1 mean recovery for all five methods within each of
+Best sample per chain and t = 0.1 mean recovery for all five methods within each of
 the nine curated families and the "other" remainder (n = 50, 13, 10, 8, 8, 5,
 4, 4, 3, 372). Against RhoDesign — the strongest baseline on this layer
 overall — TACo-Aptamer improves the t = 0.1 mean in the purine (+5.2%,
@@ -419,7 +419,7 @@ other (+5.3%, p = 1.6e-21) strata; mango3 is the single family with a deficit
 54.3/46.5 (dG), 58.3/55.6 (fam_8HB1) and 60.1/54.8 (other). Other baselines
 are stronger than RhoDesign in individual families — NA-MPNN reaches 73.5
 (theophylline), 67.0 (fam_3GCA), 52.0 (dG) and 65.3 (ztp) — but exceed
-TACo-Aptamer only in ztp (65.3 versus 61.1), consistent with Extended Data
+TACo-Aptamer only in ztp (65.3 against 61.1), consistent with Extended Data
 Table 3 of the main text. Data source:
 `data/survey/91_family_strata_gfix.json`;
 `data/survey/104_ed_tables/ed_table3_family_strata.csv`.
@@ -427,15 +427,15 @@ Table 3 of the main text. Data source:
 **Supplementary Figure 5. Design transferability decreases with ligand
 similarity to the training corpus.** (A) Per-chain maximum Tanimoto
 similarity (Morgan fingerprints) between the zero-shot ligand and all
-training ligands versus the per-chain recovery advantage of TACo-Aptamer
-over RhoDesign: Spearman ρ = −0.249 (p = 0.020) for Δbest-of-pool and
-ρ = −0.401 (p = 1.2e-4) for Δ(t = 0.1 mean) (n = 87 chains). (B) Similarity-binned means for Morgan
-fingerprints (bins n = 4, 43, 13, 27): Δbest +0.027, +0.046, +0.065, +0.022
+training ligands against the per-chain recovery advantage of TACo-Aptamer
+over RhoDesign: Spearman ρ = −0.249 (p = 0.020) for Δ(best sample) and
+ρ = −0.401 (p = 1.2e-4) for Δ(t = 0.1 mean) (n = 87 chains). (B) Means per similarity range for Morgan
+fingerprints (ranges n = 4, 43, 13, 27): Δ(best sample) +0.027, +0.046, +0.065, +0.022
 (two-sided p = —, 5.4e-5, 1.5e-3, 0.022) and Δ(t = 0.1 mean) +0.062,
 +0.047, +0.074, −0.003. Alternative fingerprints give the same qualitative trend: MACCS keys (Supplementary Ref. S8) ρ =
 −0.098 (p = 0.367) / −0.341 (p = 1.2e-3) with degenerate binning (n = 0, 0,
 2, 85), and RDKit-topological ρ = −0.232 (p = 0.031) / −0.345 (p = 1.1e-3)
-with bins n = 4, 14, 19, 50 and Δbest +0.075, +0.046, +0.047, +0.034.
+with ranges n = 4, 14, 19, 50 and Δ(best sample) +0.075, +0.046, +0.047, +0.034.
 Pairwise fingerprint agreement is high (Morgan–MACCS ρ = 0.865,
 Morgan–topological 0.889, MACCS–topological 0.817), and the Morgan
 similarities were independently recomputed with max |Δ| = 0.0. Data source:
@@ -468,9 +468,9 @@ Per-chain Spearman correlations between scMCC and scTM range from 0.18 to
 redundant. scTM scores were computed with US-align (Supplementary Ref. S2). Data source: `data/survey/92_scmcc_gfix.json`;
 `data/survey/86_sctm_gfix.json`.
 
-**Supplementary Figure 8. Predicted-backbone benchmarks.** (A) Best-of-pool and
+**Supplementary Figure 8. Predicted-backbone benchmarks.** (A) Best sample per chain and
 t = 0.1 mean recovery of all five methods on RhoFold+-predicted backbones
-(predbb) for the 193-chain subset: TACo-Aptamer 0.6895/0.5181 (Δ versus
+(predbb) for the 193-chain subset: TACo-Aptamer 0.6895/0.5181 (Δ against
 crystal −5.3%/−8.6%, paired p = 1.9e-18/1.1e-26), RhoDesign 0.6136/0.4799
 (−6.9%/−6.9%, p = 5.3e-24/8.6e-17), gRNAde cfix 0.5066/0.3500
 (−1.6%/−1.4%), NA-MPNN 0.3528/0.2964 (−19.1%/−19.8%), and AlignIF
@@ -481,11 +481,11 @@ are 0.7426/0.6036 (TACo-Aptamer), 0.6828/0.5486 (RhoDesign), 0.5223/0.3637
 (gRNAde), 0.5436/0.4947 (NA-MPNN), and 0.5763/0.5387 (AlignIF). (B) Per-chain
 correlation between predbb recovery and the quality of the predicted
 backbone (scTM of the RhoFold+ prediction against the crystal structure):
-AlignIF ρ = 0.671 at the t = 0.1 mean (p = 1.4e-26; best-of-pool 0.694,
-p = 4.5e-29; Δbest ρ = 0.430, p = 4.5e-10); TACo-Aptamer best ρ = −0.213
-(p = 0.0029), t = 0.1 mean ρ = +0.216 (p = 0.0026), Δbest ρ = +0.175
+AlignIF ρ = 0.671 at the t = 0.1 mean (p = 1.4e-26; best sample 0.694,
+p = 4.5e-29; Δ(best sample) ρ = 0.430, p = 4.5e-10); TACo-Aptamer best ρ = −0.213
+(p = 0.0029), t = 0.1 mean ρ = +0.216 (p = 0.0026), Δ(best sample) ρ = +0.175
 (p = 0.015), Δ(t = 0.1 mean) ρ = +0.207 (p = 0.0038). (C) Zero-shot ∩ predbb subset (32 chains):
-predbb TACo-Aptamer 0.7464/0.5610 versus RhoDesign 0.6794/0.5617 (Δbest
+predbb TACo-Aptamer 0.7464/0.5610 against RhoDesign 0.6794/0.5617 (Δ(best sample)
 +6.7%, two-sided p = 4.8e-6; Δ(t = 0.1 mean) −0.0007, p = 0.42); crystal scores on
 the same 32 chains 0.8035/0.6706 (TACo-Aptamer) and 0.7435/0.6246
 (RhoDesign); predbb−crystal deltas −5.7%/−11.0% and −6.4%/−6.3%. Data
@@ -504,7 +504,7 @@ ratio 1.96). (B) Per-sample cost and throughput for all methods: AlignIF
 6.5 samples/s, 154–313 MiB; gRNAde 6.40 s (2.66–9.62), 21.3 ms, 46.8 samples/s,
 69–631 MiB; NA-MPNN 3.56 s (3.38–3.85), 355.9 ms, 2.8 samples/s, 560–802 MiB.
 The ~50× per-sample cost quoted in the main text is the ratio 474.6/9.2 =
-51.6 (AlignIF versus TACo-Aptamer). Caveat (as stated in EDT4 of the main
+51.6 (AlignIF against TACo-Aptamer). Caveat (as stated in EDT4 of the main
 text): probe sets, backbone inputs, and GPU models differ across methods, so
 cross-method timing is indicative only. Data source:
 `data/survey/99_*.json`.
@@ -518,12 +518,12 @@ chains): 0.546/0.082/0.298, 0.544/0.228/0.805, 0.535/0.331/0.938. gRNAde
 cfix (437 chains): 0.360/0.161/0.798, 0.327/0.520/0.997, 0.300/0.664/1.000.
 TACo-Aptamer retains substantially higher recovery at matched diversity, and
 its default sampling already yields 88% unique sequences. Recovery values
-are scored in the survey environment (0.597 at t = 0.1 versus 0.604 in the
+are scored in the survey environment (0.597 at t = 0.1 against 0.604 in the
 canonical main table; the 8-chain scoring deviation of Supplementary Note 3).
 Data source: `data/survey/82_temp_diversity_gfix.json`.
 
 **Supplementary Figure 11. Conditioning-channel diagnostics.** (A)
-Secondary-structure robustness: per-chain Δbest-of-pool and Δ(t = 0.1 mean)
+Secondary-structure robustness: per-chain Δ(best sample) and Δ(t = 0.1 mean)
 under zeroSS, shuffleSS, and centroidSS conditions relative to standard
 scoring (values as in Supplementary Note 3; all shifts ≤ 0.6 percentage
 point). (B)
@@ -531,10 +531,10 @@ Interface-conditioned teacher-forced scoring on 115 chains: distribution of
 the interface-minus-non-interface per-position log probability difference for
 the published ensemble (mean −0.0003 nats, one-sided p = 0.879), the
 shuffleSS control (−0.0003, p = 0.888), and the seed-43 single model
-(−0.0018, p = 0.99994). (C) Decoder attention to ligand tokens versus
+(−0.0018, p = 0.99994). (C) Decoder attention to ligand tokens against
 physical C1′–ligand distance (per-chain Spearman, mean +0.104, median 0.257;
 33% of chains negative), showing no systematic nearest-ligand focusing. (D)
-Pocket-injection test: true pocket versus empty pocket +1.04 points [−1.1,
+Pocket-injection test: true pocket against empty pocket +1.04 points [−1.1,
 +3.1] (p = 0.16, n.s.); no-ligand placebo −15.6 points; intrafamily
 geometry-transplant control ΔlogP ≈ +0.0002 nats (n.s.). Data source:
 `data/survey/97_ss_robust.json`; `data/survey/96_attention.json`;
@@ -565,36 +565,36 @@ Data source: `data/survey/50_backbone_incomplete.json`; `data/survey/50_regen_fa
 **Supplementary Table 2. Headline recovery on all evaluation layers**
 
 Full rendering of Table 1 of the main text with one row per method and one
-column pair (best-of-pool / t = 0.1 mean recovery) per evaluation layer,
+column pair (best sample / t = 0.1 mean recovery) per evaluation layer,
 plus macro-F1 on the t = 0.1 pools, sequence perplexity, and the
 random-chance reference (0.250). All values are cluster-bootstrapped means over the 300-sample pools
 manifest; macro-F1 carries a 95% confidence interval. Content: cluster test
 (477 chains) — TACo-Aptamer 0.749/0.604, RhoDesign 0.694/0.551, AlignIF
-0.562/0.518, NA-MPNN 0.522/0.470, gRNAde cfix 0.530/0.358; temporal (235) —
+0.562/0.518, NA-MPNN 0.522/0.470, gRNAde cfix 0.530/0.358; time-based (235) —
 0.744/0.583, 0.713/0.563, 0.510/0.456, 0.457/0.395, 0.513/0.324; zero-shot
 (93) — 0.761/0.628, 0.718/0.595, 0.595/0.562, 0.571/0.526, 0.558/0.392;
 macro-F1 (t = 0.1 pools) — 0.577 [0.567, 0.586], 0.513, 0.491, 0.446, 0.313;
 perplexity — 2.911, 3.450, -, 3.401, 3.016.
 
-| Layer | n | Method | Best-of-pool (%) | t = 0.1 mean (%) | Δ best vs TACo (pp) | P best | Δ t01 vs TACo (pp) | P t01 |
+| Layer | n | Method | Best sample (%) | t = 0.1 mean (%) | Δ best vs TACo (pp) | P best | Δ t01 vs TACo (pp) | P t01 |
 |---|---|---|---|---|---|---|---|---|
 | cluster-based test | 477 | TACo-Aptamer | 74.9 | 60.4 | — | n/a | — | n/a |
 | cluster-based test | 477 | RhoDesign | 69.4 | 55.1 | +5.5 | 4.8e-48 | +5.3 | 6.1e-32 |
 | cluster-based test | 477 | gRNAde | 53.0 | 35.8 | +21.9 | 1.5e-79 | +24.6 | 1.2e-79 |
 | cluster-based test | 477 | NA-MPNN | 52.2 | 47.0 | +22.7 | 1.3e-77 | +13.4 | 1.0e-62 |
 | cluster-based test | 477 | AlignIF | 56.2 | 51.8 | +18.7 | 4.0e-77 | +8.6 | 2.0e-42 |
-| temporal independent test | 235 | TACo-Aptamer | 74.4 | 58.3 | — | n/a | — | n/a |
-| temporal independent test | 235 | RhoDesign | 71.3 | 56.3 | +3.2 | 2.7e-12 | +1.9 | 5.1e-5 |
-| temporal independent test | 235 | gRNAde | 51.3 | 32.4 | +23.2 | 4.5e-40 | +25.9 | 4.0e-40 |
-| temporal independent test | 235 | NA-MPNN | 45.6 | 39.5 | +28.8 | 5.6e-40 | +18.8 | 4.5e-39 |
-| temporal independent test | 235 | AlignIF | 51.0 | 45.6 | +23.4 | 1.1e-39 | +12.6 | 2.8e-30 |
+| time-based independent test | 235 | TACo-Aptamer | 74.4 | 58.3 | — | n/a | — | n/a |
+| time-based independent test | 235 | RhoDesign | 71.3 | 56.3 | +3.2 | 2.7e-12 | +1.9 | 5.1e-5 |
+| time-based independent test | 235 | gRNAde | 51.3 | 32.4 | +23.2 | 4.5e-40 | +25.9 | 4.0e-40 |
+| time-based independent test | 235 | NA-MPNN | 45.6 | 39.5 | +28.8 | 5.6e-40 | +18.8 | 4.5e-39 |
+| time-based independent test | 235 | AlignIF | 51.0 | 45.6 | +23.4 | 1.1e-39 | +12.6 | 2.8e-30 |
 | zero-shot (ligand-held-out) test | 93 | TACo-Aptamer | 76.1 | 62.8 | — | n/a | — | n/a |
 | zero-shot (ligand-held-out) test | 93 | RhoDesign | 71.8 | 59.5 | +4.3 | 7.2e-9 | +3.4 | 4.7e-5 |
 | zero-shot (ligand-held-out) test | 93 | gRNAde | 55.8 | 39.2 | +20.3 | 5.6e-17 | +23.7 | 5.8e-17 |
 | zero-shot (ligand-held-out) test | 93 | NA-MPNN | 57.1 | 52.5 | +19.0 | 2.4e-16 | +10.3 | 3.0e-11 |
 | zero-shot (ligand-held-out) test | 93 | AlignIF | 59.5 | 56.2 | +16.6 | 5.7e-16 | +6.6 | 2.9e-7 |
 
-Recovery = chain-macro sequence recovery (%). Δ = TACo-Aptamer − method (mean paired per-chain difference, percentage points; positive = TACo-Aptamer better). P = paired two-sided Wilcoxon signed-rank test (81_wilcoxon_gfix.json; zero-delta pairs dropped). Cluster-based layer from 63_main_table_gfix.json (gRNAde C/G decode-fixed); temporal (235) and zero-shot (93) layers from 69_alayer_gfix.json views. TACo-Aptamer row: Δ/P not applicable (self-comparison).
+Recovery = chain-macro sequence recovery (%). Δ = TACo-Aptamer − method (mean paired per-chain difference, percentage points; positive = TACo-Aptamer better). P = paired two-sided Wilcoxon signed-rank test (81_wilcoxon_gfix.json; zero-delta pairs dropped). Cluster-based layer from 63_main_table_gfix.json (gRNAde C/G decode-fixed); time-based (235) and zero-shot (93) layers from 69_alayer_gfix.json views. TACo-Aptamer row: Δ/P not applicable (self-comparison).
 Data source: `data/survey/63_main_table_gfix.json`;
 `data/survey/69_alayer_gfix.json`;
 `data/survey/91_perbase_macrof1_gfix.json`;
@@ -712,18 +712,18 @@ Data source: `data/survey/93_tanimoto_zs.json`;
 
 **Supplementary Table 4. Ligand-similarity transferability, all fingerprints**
 
-Per-fingerprint Spearman correlations and similarity-binned Δbest / Δ(t = 0.1 mean)
+Per-fingerprint Spearman correlations and Δ(best sample) / Δ(t = 0.1 mean) per similarity range
 for the 87-chain zero-shot similarity analysis (full rendering of
 Supplementary Figure 5). Morgan: ρbest = −0.249 (p = 0.020), ρ(t = 0.1 mean) =
-−0.401 (p = 1.2e-4); bins n = 4/43/13/27, Δbest +0.027/+0.046/+0.065/+0.022
+−0.401 (p = 1.2e-4); ranges n = 4/43/13/27, Δ(best sample) +0.027/+0.046/+0.065/+0.022
 (p = —, 5.4e-5, 1.5e-3, 0.022), Δ(t = 0.1 mean) +0.062/+0.047/+0.074/−0.003. MACCS:
-ρ = −0.098 (p = 0.367) / −0.341 (p = 1.2e-3); degenerate bins n = 0/0/2/85.
-RDKit-topological: ρ = −0.232 (p = 0.031) / −0.345 (p = 1.1e-3); bins
-n = 4/14/19/50, Δbest +0.075/+0.046/+0.047/+0.034. Pairwise fingerprint
+ρ = −0.098 (p = 0.367) / −0.341 (p = 1.2e-3); degenerate ranges n = 0/0/2/85.
+RDKit-topological: ρ = −0.232 (p = 0.031) / −0.345 (p = 1.1e-3); ranges
+n = 4/14/19/50, Δ(best sample) +0.075/+0.046/+0.047/+0.034. Pairwise fingerprint
 agreement (Spearman): Morgan–MACCS 0.865, Morgan–topological 0.889,
 MACCS–topological 0.817.
 
-| Fingerprint | Bin | n | TACo best (%) | RhoDesign best (%) | Δ best mean (pp) | P (two-sided) | Δ t01 mean (pp) |
+| Fingerprint | Range | n | TACo best (%) | RhoDesign best (%) | Δ best mean (pp) | P (two-sided) | Δ t01 mean (pp) |
 |---|---|---|---|---|---|---|---|
 | Morgan (r=2, 2048-bit) | [0,0.2) | 4 | 73.4 | 70.7 | +2.7 | n/a | +6.2 |
 | Morgan (r=2, 2048-bit) | [0.2,0.4) | 43 | 79.0 | 74.3 | +4.6 | 5.4e-5 | +4.7 |
@@ -747,20 +747,20 @@ MACCS–topological 0.817.
 | RDKit topological | similarity vs Δ best | 87 | -0.232 | 0.031 |
 | RDKit topological | similarity vs Δ t01 | 87 | -0.345 | 0.0011 |
 
-Δ = TACo-Aptamer − RhoDesign (per-chain paired, percentage points). Bin rows: chain-macro recovery within each max-Tanimoto bin; P = paired two-sided Wilcoxon (n/a where n < 10). Spearman rows: overall correlation between max Tanimoto and per-chain Δ (both conventions). Morgan = original 93_tanimoto_zs.json (identical to the 106 morgan_recheck, verified); MACCS / RDKit-topological from 106_tanimoto_robust.json. MACCS similarities saturate (85/87 chains in the top bin) — bins with n = 0 or n < 10 carry n/a. 6 of the 93 zero-shot chains lack a fingerprintable ligand and are excluded (5 without ligand annotation; 6PQ7_C ligand OXV has no SMILES).
+Δ = TACo-Aptamer − RhoDesign (per-chain paired, percentage points). Range rows: chain-macro recovery within each max-Tanimoto range; P = paired two-sided Wilcoxon (n/a where n < 10). Spearman rows: overall correlation between max Tanimoto and per-chain Δ (both conventions). Morgan = original 93_tanimoto_zs.json (identical to the 106 morgan_recheck, verified); MACCS / RDKit-topological from 106_tanimoto_robust.json. MACCS similarities saturate (85/87 chains in the top range) — ranges with n = 0 or n < 10 carry n/a. 6 of the 93 zero-shot chains lack a fingerprintable ligand and are excluded (5 without ligand annotation; 6PQ7_C ligand OXV has no SMILES).
 Data source: `data/survey/93_tanimoto_zs.json`; `data/survey/106_*.json`.
 
 **Supplementary Table 5. Leave-one-family-out and family-coverage results**
 
-Zero-shot-93 recovery (best-of-pool / t = 0.1 mean) per training-pool variant with paired
+Zero-shot-93 recovery (best sample / t = 0.1 mean) per training-pool variant with paired
 p-value against the baseline: baseline 0.7335/0.6332; full_ctl 0.7339/0.6450
-(Δbest +0.0004, p = 0.911); lofo_amino 0.7146/0.6067 (−0.0189, p = 2.7e-4);
+(Δ(best sample) +0.0004, p = 0.911); lofo_amino 0.7146/0.6067 (−0.0189, p = 2.7e-4);
 lofo_sam_sah 0.7189/0.6223 (−0.0146, p = 1.5e-3); lofo_2ba 0.7215/0.6150
 (−0.0120, p = 0.015); lofo_ntp 0.7230/0.6243 (−0.0105, p = 0.097); lofo_cla
 0.7287/0.6357 (−0.0048, p = 0.499); only1fam 0.7124/0.6268 (−0.0211,
 p = 1.4e-5); only2fam 0.7350/0.6411 (+0.0015, p = 0.688); only3fam
 0.7329/0.6371 (−0.0006, p = 0.813); only5fam 0.7374/0.6268 (+0.0039,
-p = 0.361). Interface-restricted subset (115 chains; values best-of-pool / t = 0.1 mean
+p = 0.361). Interface-restricted subset (115 chains; values best sample / t = 0.1 mean
 / interface best / interface t = 0.1 mean): baseline 0.7214/0.6133/0.8145/0.6476;
 full_ctl 0.7269/0.6282/0.8375/0.6210; lofo_amino
 0.7105/0.6061/0.8030/0.6189; lofo_sam 0.7213/0.6153/0.8166/0.5920; lofo_cla
@@ -828,7 +828,7 @@ Data source: `data/survey/95_families.json` (family-level records);
 
 **Supplementary Table 7. Conditioning-channel ablations**
 
-(a) Quick-30 training protocol (best-of-pool / t = 0.1 mean recovery): baseline
+(a) Quick-30 training protocol (best sample / t = 0.1 mean recovery): baseline
 64.66/56.85, no_ss 61.38/53.28 (−3.28), no_aug 64.30/57.32 (−0.36), no_iface
 63.66/56.22 (−1.00), no_ligand 63.82/56.99 (−0.84). (b) Release recipe
 scored with 300-sample pools: ens2 74.58/59.72 with interface recovery
@@ -837,7 +837,7 @@ scored with 300-sample pools: ens2 74.58/59.72 with interface recovery
 (−6.31); no_ligand 70.78/59.13, interface 80.92 (−4.68). Interface deltas are
 significant at one-sided p < 1e-4 for all four ablations (archived Wilcoxon
 one-sided p-values 2e-5, 3e-5, 1e-5, 2e-5). Against the single model (no_ensemble),
-no component removal significantly reduces interface best-of-pool recovery
+no component removal significantly reduces the interface recovery of the best sample
 (no_ss −0.2 pp, p = 0.57; no_aug −2.1 pp, p = 0.29; no_ligand −0.4 pp,
 p = 0.40; two-sided Wilcoxon on the 115 interface chains), whereas the
 ensemble adds +4.3 pp (p = 3.4e-5) — the only significant intrafamily
@@ -857,7 +857,7 @@ analysis/19 §3.
 
 **Supplementary Table 8. Predicted-backbone benchmarks, per method**
 
-Crystal versus RhoFold+-predicted backbone (predbb) recovery on the 193-chain
+Crystal against RhoFold+-predicted backbone (predbb) recovery on the 193-chain
 subset, with paired deltas, plus the recovery–backbone-quality (scTM)
 correlation rows and the 32-chain zero-shot ∩ predbb subset (full rendering
 of Supplementary Figure 8; all values as listed there). Paired two-sided
@@ -966,7 +966,7 @@ independent 27/130 (21%), zero-shot 25/37 (68%); fragment-suspicion records
 Clarification: because all 11 high-identity hits are contained in the 227
 embedded hits, the deduplicated union of flagged constructs is 227/422
 (53.8%; test layer 178/255, 69.8%); the main text cites this audit by the
-deduplicated union (54% of natives; 70% cluster-based, 21% temporal), and
+deduplicated union (54% of natives; 70% cluster-based, 21% time-based), and
 both countings are given here for transparency.
 
 | Tier | Test (n = 255) | Independent (n = 130) | Zero-shot (n = 37) | All (n = 422) |
@@ -981,7 +981,7 @@ Data source: `data/survey/89_rnet_leakage_audit.json`; analysis/20.
 
 **Supplementary Table 11. Variant scan of the TACo-Aptamer training recipe**
 
-One row per trained variant with checkpoint name, stage configuration, best-of-pool /
+One row per trained variant with checkpoint name, stage configuration, best sample /
 t = 0.1 mean cluster-test recovery, and validation recovery at selection time.
 Values are given as percentages with two decimals, matching the
 model-selection convention in the analysis archive; other tables use
