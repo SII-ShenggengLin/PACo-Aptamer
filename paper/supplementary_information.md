@@ -15,8 +15,9 @@
 - Supplementary Note 3 — Conditioning-channel diagnostics
 - Supplementary Note 4 — Analysis of measured aptamer–target interactions
 - Supplementary Note 5 — Contamination screen of the RNet training corpus
-- Supplementary Note 6 — Ensemble selection, weight-soup controls and the validation record
-- Supplementary Note 7 — Baseline retraining and inference protocol
+- Supplementary Note 6 — The OpenKnot challenge and the scope of structure-only design
+- Supplementary Note 7 — Ensemble selection, weight-soup controls and the validation record
+- Supplementary Note 8 — Baseline retraining and inference protocol
 
 **Supplementary Figures**
 
@@ -324,7 +325,11 @@ RNet signal is excluded from every figure and table of the main text and of
 this supplement. The audit artifacts are archived in
 `data/survey/89_rnet_leakage_audit.json`.
 
-### Supplementary Note 6: Ensemble selection, weight-soup controls and the validation record
+### Supplementary Note 6: The OpenKnot challenge and the scope of structure-only design
+
+A concurrent result helps fix the limits of what structure-only design can reach. In the OpenKnot challenge (Supplementary Ref. S23), deep-learning designers matched experienced human experts on de novo pseudoknot targets without relying on 3D structure prediction, guided by RNet (Supplementary Ref. S22), a foundation model trained on roughly two million prior chemical-mapping measurements from Eterna. Two aspects of that result bound its relevance here. First, OpenKnot probed every design in the absence of small-molecule ligands so that pseudoknot formation would reflect the design alone. The objective was the correct secondary structure, not binding, and no participating framework conditioned on a target molecule. Second, although the best designs formed well-ordered folds, the cryo-EM structures revealed noncanonical tertiary interactions that were neither designed by the AI methods nor predicted by AlphaFold 3 (Supplementary Ref. S26). Design centred on secondary structure controls topology while leaving the tertiary geometry of the pocket, which defines binding, unspecified. For aptamers that geometry is the specification, so design from secondary structure alone and atomic target conditioning are complements rather than substitutes. Our contamination screen adds one further caution. When the Eterna chemical-mapping libraries that trained RNet were scanned against our benchmark, near-verbatim copies of test-layer native sequences (global identity ≥ 0.8, or embedding in a longer measured construct at ≤ 10% edit distance) had already been measured for 54% of natives, 70% of the cluster-based layer but only 21% of the time-based layer (Supplementary Note 5, Supplementary Table 10). Contamination of this kind is invisible to sequence-level checks against structural databases. The pattern validates time-based holdout as a principle of split design, and cautions that structure-prediction test sets cannot benchmark such models without explicit contamination screening.
+
+### Supplementary Note 7: Ensemble selection, weight-soup controls and the validation record
 
 **Variant scan.** The released model is an ensemble of two stage-2 checkpoints selected on validation data. Candidate members came from a scan of development variants — random seed, secondary structure (SS) dropout rate, batch size, exponential moving average (EMA) of weights, and exact reruns of the base recipe — all finetuned under one identical stage-2 recipe (joint 1:1 mixing with stage-1 chains against forgetting, validation-based checkpoint selection, batch size 4, 8 epochs) and evaluated on the cluster-based test layer with pools of 300 samples (Supplementary Table 11; scan numbers use the pre-canonical manifest native caliber, which differs by at most 0.1% from the canonical caliber of Supplementary Table 2). The scan ranked the seed-43 variant and the SS-dropout-0.15 variant as the two strongest single models (71.49% and 71.45% for the best sample per chain; all other pre-selection variants ≤ 70.95%). The two differ in both seed and SS-dropout regularisation and occupy different stage-1 basins of the loss landscape. A later follow-up variant combining both changes (seed 43 × SS-dropout 0.15) reached 71.44% for the best sample; it was trained after the member selection had been frozen and did not alter it, and we report it in Supplementary Table 11. Training and ensemble decoding are implemented with the fairseq toolkit (Supplementary Ref. S25).
 
@@ -332,7 +337,7 @@ this supplement. The audit artifacts are archived in
 
 **Weight-soup controls.** Weight-space averaging across these training variants degrades or fails to help: soups of two to four checkpoints scored 66.17–70.90% on the best sample, against 71.5% for the best single model (Supplementary Table 11). Averaging two stage-2 checkpoints that share one stage-1 basin leaves performance unchanged (70.90%), adding the SS-dropout variant degrades it (69.64%), and adding the seed-43 variant across stage-1 basins degrades it sharply (66.17%). This is the behaviour predicted by linear mode connectivity theory (Supplementary Ref. S13): independently trained networks are not connected by linear paths in weight space, so weight averaging can only succeed within a basin, whereas probability-space averaging does not require connectivity and is the operation that exploits between-basin diversity.
 
-### Supplementary Note 7: Baseline retraining and inference protocol
+### Supplementary Note 8: Baseline retraining and inference protocol
 
 **Shared splits and effective training sets.** RhoDesign, gRNAde, NA-MPNN and AlignIF were retrained from their official training procedures on the identical 5,773-chain training split (validation on the same 96 chains for every method, TACo-Aptamer included). Each official featurization pipeline tolerates a slightly different subset of the split, and we report the effective training-set sizes rather than forcing a common subset: TACo-Aptamer 5,773 (the custom featurization is the most tolerant), AlignIF 5,733 (official processed-format filtering), RhoDesign 5,683 (coordinate-completeness requirements), NA-MPNN 5,679 (official parsing, after removal of the 29 protein-trace chains of Supplementary Note 1) and gRNAde 5,584 (biotite base-pair extraction fails on some short or aberrant chains). These sizes are also listed in Extended Data Table 1 of the main text.
 
@@ -1115,6 +1120,9 @@ ICLR* (2021). (GVP.)
 S25. Ott, M. et al. fairseq: a fast, extensible toolkit for sequence
 modeling. *Proc. NAACL-HLT Demonstrations* (2019).
 
+S26. Abramson, J. et al. Accurate structure prediction of biomolecular
+interactions with AlphaFold 3. *Nature* 630, 493–500 (2024).
+
 
 ## Editorial checklist: remaining ⚠️ items (remove before submission)
 
@@ -1127,5 +1135,5 @@ modeling. *Proc. NAACL-HLT Demonstrations* (2019).
    p = 0.002) and the post-repair JSON (0.433 [0.267, 0.600], p = 0.0039);
    the SI text uses the post-repair JSON value and flags the discrepancy —
    analyst to confirm the final scoring configuration.
-3. **Supplementary References** — S1–S25 are draft entries; verify volumes,
+3. **Supplementary References** — S1–S26 are draft entries; verify volumes,
    pages and DOIs before submission.
