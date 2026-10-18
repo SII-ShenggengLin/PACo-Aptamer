@@ -13,7 +13,7 @@
 - Supplementary Note 1 — Data-quality review and baseline code patches
 - Supplementary Note 2 — Zero-shot ligand identities and ligand-family definitions
 - Supplementary Note 3 — Conditioning-channel diagnostics
-- Supplementary Note 4 — Retrospective analysis of measured aptamer–target interactions
+- Supplementary Note 4 — Analysis of measured aptamer–target interactions
 - Supplementary Note 5 — Contamination screen of the RNet training corpus
 - Supplementary Note 6 — Ensemble selection, weight-soup controls and the validation record
 - Supplementary Note 7 — Baseline retraining and inference protocol
@@ -65,7 +65,7 @@ A reproducibility review preceded all comparisons reported in the main text. We 
 
 **The gRNAde decoding repair.** A native-likelihood diagnostic, run while assembling the perplexity column of Supplementary Table 2, exposed a vocabulary-ordering defect in our gRNAde inference harness: sampled tokens had been written out with the alphabet order A,C,G,U, whereas the model's training pipeline defines the token order A,G,C,U (`tools/gRNAde/src/constants.py`), so C and G had been interchanged at decode time (A and U are unaffected). Three independent checks established the correct order. Teacher-forced scoring of the native sequence under the retrained checkpoint favours the official order on 5 of 5 spot-checked chains (for 1D4R_A, −0.970 against −1.121 log units per nucleotide). A paired 40-chain × 100-sample comparison at t = 0.1 gives a mean per-chain recovery advantage of +0.0199 for the official decode (25 wins, 12 losses, 3 ties). And the two decodes are related by a deterministic bijection, so the official sequences could be reconstructed exactly by interchanging C and G in the existing pools. Recomputing the cluster-based layer raised gRNAde recovery from 50.15% to 53.00% (best sample per chain) and from 31.21% to 35.77% (t = 0.1 mean), and every downstream metric was recomputed under the corrected pools (structural self-consistency 0.219 → 0.265 scTM; contact fidelity 0.391 → 0.472 scMCC; family-profile KL 4.61 → 4.66). The repair only raises gRNAde's scores, and every claim of a TACo-Aptamer advantage over gRNAde is unchanged after it (all P ≤ 2.9 × 10⁻¹⁷). The pre-repair values are retained as a labelled reference row in the released per-chain files.
 
-**Scoring-geometry repair in the retrospective harness.** The same review caught a second defect on our own side: the nine-atom featurization used for likelihood scoring in the retrospective analysis (Fig. 6d of the main text; the GVP encoder input representation, Supplementary Ref. S24) had filled the third coordinate slot — defined at training time as the literal N1 atom of every base — with the glycosidic N9 atom of purines, erasing the geometric signal that distinguishes purines from pyrimidines and shifting the scoring geometry off the training distribution. A 2 × 2 decomposition on 40 AptaDB chains (N1/N9 geometry × the two scoring checkpoints) showed that the initial, inverted result (aptamers scoring below matched random controls) was entirely due to the geometry: N1 geometry gives +2.22 and +2.11 log units for the two checkpoints, while N9 geometry gives −0.42 and −0.45. All retrospective numbers in the main text and in Supplementary Note 4 were produced after this repair.
+**Scoring-geometry repair in the interaction-analysis harness.** The same review caught a second defect on our own side: the nine-atom featurization used for likelihood scoring in this analysis (Fig. 6d of the main text; the GVP encoder input representation, Supplementary Ref. S24) had filled the third coordinate slot — defined at training time as the literal N1 atom of every base — with the glycosidic N9 atom of purines, erasing the geometric signal that distinguishes purines from pyrimidines and shifting the scoring geometry off the training distribution. A 2 × 2 decomposition on 40 AptaDB chains (N1/N9 geometry × the two scoring checkpoints) showed that the initial, inverted result (aptamers scoring below matched random controls) was entirely due to the geometry: N1 geometry gives +2.22 and +2.11 log units for the two checkpoints, while N9 geometry gives −0.42 and −0.45. All interaction-analysis numbers in the main text and in Supplementary Note 4 were produced after this repair.
 
 ### Supplementary Note 2: Zero-shot ligand identities and ligand-family definitions
 
@@ -207,9 +207,9 @@ rather than depending on any single channel, which explains the robustness of
 the headline metrics to SS perturbation and the modest marginal value of exact
 pocket geometry on the native-backbone benchmark.
 
-### Supplementary Note 4: Retrospective analysis of measured aptamer–target interactions
+### Supplementary Note 4: Analysis of measured aptamer–target interactions
 
-This note describes the assembly of the retrospective aptamer cohort and the
+This note describes the assembly of the aptamer cohort and the
 scoring protocol behind Fig. 6d,e of the main text.
 
 **Cohort assembly.** We scraped 1,350 aptamer–target records from AptaDB (Supplementary Ref. S19; 283
@@ -253,15 +253,13 @@ family sits at mean rank percentile 0.439 [0.28, 0.61] of the model's scores
 pooling (n = 84 pairs), the pooled correlation is
 ρ = 0.046 and the top affinity quartile scores +0.20 SD above the bottom
 quartile; (iii) an exploratory top-half sensitivity analysis over 10 families
-gives 0.433 [0.267, 0.600] (one-sided p = 0.0039 against the 0.5 null). We
-flag (iii) as exploratory: the archived pre-repair report stated 0.633
+gives 0.433 [0.267, 0.600] (one-sided p = 0.0039 against the 0.5 null). Analysis (iii) is exploratory: the archived pre-repair report stated 0.633
 (p = 0.002) under an earlier scoring configuration, and the post-repair value
 above has not yet been independently re-confirmed; we therefore make no claim
 from analysis (iii) beyond the qualitative direction (⚠️PENDING analyst
 confirmation of the final configuration).
 
-**Confounder diagnostics.** Four diagnostics accompany the retrospective
-signal. D1: a length scan of random sequences shows a residual +0.003 log
+**Confounder diagnostics.** Four diagnostics accompany the signal. D1: a length scan of random sequences shows a residual +0.003 log
 units per nucleotide length dependence after the scoring fix (compared with +0.054
 before the fix), i.e. the length bias that inflated the original analysis is
 largely removed. D2: a borrowed-structure control (scoring aptamers against
@@ -274,9 +272,9 @@ the qualitative conclusions unchanged.
 
 **Relation to the N9 geometry repair.** An earlier internal version of this
 analysis, run under the pre-repair backbone geometry, produced a null or
-negative retrospective signal (N9-geometry pool: −0.42/−0.45 log units by
+negative signal (N9-geometry pool: −0.42/−0.45 log units by
 source, compared with +2.22/+2.11 under the repaired N1 geometry; Supplementary
-Note 1). The retrospective signal therefore depends on the same
+Note 1). The signal therefore depends on the same
 backbone-geometry correctness that underlies the structure benchmarks, and we
 report it only for the repaired pipeline.
 
@@ -328,7 +326,7 @@ this supplement. The audit artifacts are archived in
 
 ### Supplementary Note 6: Ensemble selection, weight-soup controls and the validation record
 
-**Variant scan.** The released model is an ensemble of two stage-2 checkpoints selected on validation data. Candidate members came from a scan of development variants — random seed, secondary structure (SS) dropout rate, batch size, exponential moving average (EMA) of weights, and exact reruns of the base recipe — all finetuned under one identical stage-2 recipe (joint 1:1 mixing with stage-1 chains against forgetting, validation-based checkpoint selection, batch size 4, 8 epochs) and evaluated on the cluster-based test layer with pools of 300 samples (Supplementary Table 11; scan numbers use the pre-canonical manifest native caliber, which differs by at most 0.1% from the canonical caliber of Supplementary Table 2). The scan ranked the seed-43 variant and the SS-dropout-0.15 variant as the two strongest single models (71.49% and 71.45% for the best sample per chain; all other pre-selection variants ≤ 70.95%). The two differ in both seed and SS-dropout regularisation and occupy different stage-1 basins of the loss landscape. A later follow-up variant combining both changes (seed 43 × SS-dropout 0.15) reached 71.44% for the best sample; it was trained after the member selection had been frozen and did not alter it, and we report it in Supplementary Table 11 for completeness. Training and ensemble decoding are implemented with the fairseq toolkit (Supplementary Ref. S25).
+**Variant scan.** The released model is an ensemble of two stage-2 checkpoints selected on validation data. Candidate members came from a scan of development variants — random seed, secondary structure (SS) dropout rate, batch size, exponential moving average (EMA) of weights, and exact reruns of the base recipe — all finetuned under one identical stage-2 recipe (joint 1:1 mixing with stage-1 chains against forgetting, validation-based checkpoint selection, batch size 4, 8 epochs) and evaluated on the cluster-based test layer with pools of 300 samples (Supplementary Table 11; scan numbers use the pre-canonical manifest native caliber, which differs by at most 0.1% from the canonical caliber of Supplementary Table 2). The scan ranked the seed-43 variant and the SS-dropout-0.15 variant as the two strongest single models (71.49% and 71.45% for the best sample per chain; all other pre-selection variants ≤ 70.95%). The two differ in both seed and SS-dropout regularisation and occupy different stage-1 basins of the loss landscape. A later follow-up variant combining both changes (seed 43 × SS-dropout 0.15) reached 71.44% for the best sample; it was trained after the member selection had been frozen and did not alter it, and we report it in Supplementary Table 11. Training and ensemble decoding are implemented with the fairseq toolkit (Supplementary Ref. S25).
 
 **Output-space ensembling and the validation record.** The ensemble averages the two members' stepwise softmax probability distributions before multinomial sampling — the standard ensemble-decoding operation for autoregressive sequence models, i.e. a linear opinion pool of the two stepwise distributions (Supplementary Refs. S11, S12). Pool sizes are unchanged relative to single models and the inference cost doubles, as reported in Extended Data Table 4 of the main text. Ensemble error is bounded by the mean member error minus a diversity (ambiguity) term (Supplementary Ref. S10), so gains are expected to grow precisely when members disagree. A three-member ensemble adding the third-ranked variant scored marginally higher on the cluster-based test set (75.2% against 74.6% for the best sample, manifest caliber) but was rejected on validation (validation best 0.8256 against 0.8263; validation t = 0.1 mean 0.7256 against 0.7331; the simpler two-member configuration was preferred), and test-set numbers were not used for the final configuration choice. After the interface-weighting removal (Methods of the main text), the selection was re-verified on the same 96 validation chains with the final noiface checkpoints: ens2 0.8281 > ssdo15 0.8135 > seed43 0.7954 (validation best sample; t = 0.1 means 0.7384, 0.7437, 0.7343). The best single model already outperforms every baseline on every test layer under both recovery measures, so the ensemble is not load-bearing for any claim in the main text; its own contribution is quantified in Fig. 4a of the main text (+3.2% globally, +4.3% at the interface) and in Supplementary Table 7.
 
@@ -554,11 +552,11 @@ Summary of every data-quality action described in Supplementary Note 1, with sco
 | Residue/atom-name normalization (incl. modified nucleotides) | all chains | resname_to_char.json maps 684 CCD codes (modified nucleotides -> parent base via MOD_MAP, unmapped -> 'N' skipped in evaluation); resname 'N' (unspecified RNA link) -> letter 'N'; 5' variants (+U etc.) -> parent base; legacy atom name O5* -> O5' on 13 chains (4 test / 9 train) | mapping table + parser patches | fixed | data/survey/resname_to_char.json |
 | NA-MPNN chains with missing C1' coordinates | test set | 5 chains (5NFV_B, 7E9I_A, 8U5J_A, 8VPV_A, 9GUT_X) | not removable (coordinates absent in the source PDB); evaluated with the valid-position convention | documented (kept) | n/a |
 | RibonanzaNet (RNet) screening-library leakage audit | external RDAT library vs benchmark chains | 422 native constructs scanned (4,525,354 sequences): 0 exact, 11 high-similarity (>=0.8), 227 embedded, 284 fragment suspects; verdict FAIL | leakage found -> the RNet-based triage experiment was vetoed and never run (audit itself reported as a methodological finding) | rejected (experiment not run) | data/survey/89_rnet_leakage_audit.json |
-| Retrospective-library leakage screen (AptaDB) | AptaDB retrospective audit library | 254 scored -> 214 clean (962 CD-HIT-est 0.8 clusters vs the training library) | exact + cluster-level leakage filtering before scoring | filtered | data/survey/79_aptadb_retro.json; data/survey/79_leak_out.fa.clstr |
-| Retrospective-library leakage screen (UTexas) | UTexas (Zenodo 8387047) retrospective audit library | 293 new ssRNA -> 228 clean (936 CD-HIT-est 0.8 clusters vs the training library) | same filtering convention as AptaDB (step-79 protocol reused) | filtered | data/survey/88_utexas_audit.json; data/survey/88_leak_out.fa.clstr |
+| Interaction-library leakage screen (AptaDB) | AptaDB interaction-analysis library | 254 scored -> 214 clean (962 CD-HIT-est 0.8 clusters vs the training library) | exact + cluster-level leakage filtering before scoring | filtered | data/survey/79_aptadb_retro.json; data/survey/79_leak_out.fa.clstr |
+| Interaction-library leakage screen (UTexas) | UTexas (Zenodo 8387047) interaction-analysis library | 293 new ssRNA -> 228 clean (936 CD-HIT-est 0.8 clusters vs the training library) | same filtering convention as AptaDB (step-79 protocol reused) | filtered | data/survey/88_utexas_audit.json; data/survey/88_leak_out.fa.clstr |
 | Protein-context demo chains (screening record) | 30 protein-complex chains outside the ligand benchmark | 30 chains; protein-as-context effect about zero (interface delta +0.0003, P = 0.72; overall delta -0.0018, P = 0.51) | screening/demo only; no benchmark entries removed | screened | data/survey/87_protein_demo.json |
 
-Documentary sources: analysis/10_对比方法基准报告.md §3 (data-quality audit and repairs), analysis/05_会话交接文档.md, analysis/20 (RNet leakage audit), analysis/16/17 (retrospective-library audits). Categories marked ⚠️ have no surviving structured per-item list and are transcribed from the text record; all other rows are backed by the cited JSON/clstr files. The 29 protein-trace chains named in the documents sit inside the broader structured drop lists (52/53 files), which also contain other defect classes.
+Documentary sources: analysis/10_对比方法基准报告.md §3 (data-quality audit and repairs), analysis/05_会话交接文档.md, analysis/20 (RNet leakage audit), analysis/16/17 (interaction-library audits). Categories marked ⚠️ have no surviving structured per-item list and are transcribed from the text record; all other rows are backed by the cited JSON/clstr files. The 29 protein-trace chains named in the documents sit inside the broader structured drop lists (52/53 files), which also contain other defect classes.
 
 Data source: `data/survey/50_backbone_incomplete.json`; `data/survey/50_regen_fails.json`; `data/survey/52_nampnn_preproc_dropped.json`; `data/survey/53_alignif_data_dropped.json`; `data/survey/resname_to_char.json`; `data/survey/89_rnet_leakage_audit.json`; `data/survey/79_aptadb_retro.json`; `data/survey/88_utexas_audit.json`; `data/survey/87_protein_demo.json`; analysis/10 §3.
 
