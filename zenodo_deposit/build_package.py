@@ -28,6 +28,7 @@ DIRECTORIES = [
     "data/survey/grnade_inputs_v2",
     "data/survey/grnade_inputs_btest_v2",
     "data/survey/grnade_inputs_predbb",
+    "data/survey/grnade_out_v2",
     "data/survey/77_ens2_pool_btest",
     "data/survey/paco_fix_pool_ens2noiface",
     "data/survey/paco_av2_pool_ens2noiface",
@@ -126,7 +127,7 @@ versions and protocols.
 Structures and chemical-component annotations derive from the RCSB Protein Data
 Bank (https://www.rcsb.org/) and the PDB Chemical Component Dictionary
 (https://www.wwpdb.org/data/ccd). Aptamer–target interaction data derive from
-AptaDB (https://www.aptamer.org/) and the UTexas Aptamer Database
+AptaDB (https://lmmd.ecust.edu.cn/aptadb/) and the UTexas Aptamer Database
 (https://doi.org/10.5281/zenodo.8387047). AlignIF source data are described at
 https://doi.org/10.5281/zenodo.20528802. Please cite the original resources as
 well as PACo-Aptamer when reusing the corresponding subsets.

@@ -2,6 +2,7 @@
   "metadata": {
     "title": "Research data supporting PACo-Aptamer: ligand-conditioned inverse folding for RNA aptamer design",
     "upload_type": "dataset",
+    "access_right": "open",
     "publication_date": "2026-11-06",
     "version": "1.0.0",
     "description": "<p>Curated research data supporting the PACo-Aptamer manuscript. The archive contains the final cluster-, time- and ligand-holdout splits; 6,346 canonical cleaned RNA chain structures; RNA–ligand complex features; preprocessed training data for PACo-Aptamer and the four retrained baselines; final benchmark and analysis outputs; designed-sequence pools; Extended Data and Supplementary tables; predicted-backbone and aptamer–target interaction assets; and the selected final PACo-Aptamer, RhoDesign, gRNAde, NA-MPNN and AlignIF checkpoints. Paths mirror the source repository. A per-file SHA-256 manifest is included.</p><p>The bulk raw RCSB PDB/mmCIF download, intermediate caches, logs, superseded backups, third-party Python libraries and development checkpoints are excluded. External software and upstream structure-prediction weights remain necessary for full retraining and refolding workflows.</p><p>Source code: <a href=\"https://github.com/SII-ShenggengLin/RNA_tertiary_stru_IF\">RNA_tertiary_stru_IF</a> (MIT). This dataset is released under CC BY 4.0. Primary data originate from the RCSB Protein Data Bank, PDB Chemical Component Dictionary, AptaDB and the UTexas Aptamer Database; see the archive README for attribution and scope.</p>",
