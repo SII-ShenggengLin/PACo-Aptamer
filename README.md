@@ -2,6 +2,12 @@
 
 RNA 三级结构逆折叠（inverse folding）研究项目：AlignIF 复现与数据管线、RNA 设计方法基准评估、配体/适配体验证实验，以及论文手稿与图表。
 
+## 代码与数据公开
+
+- 代码：本仓库（[GitHub](https://github.com/SII-ShenggengLin/RNA_tertiary_stru_IF)），MIT 许可证。
+- 论文复现精选数据与选定最终权重：[Zenodo](https://doi.org/10.5281/zenodo.24005533)，CC BY 4.0。
+- `zenodo_deposit/`：数据包构建脚本、逐文件 SHA-256 清单生成逻辑、Zenodo 元数据与 API 上传/发布脚本。
+
 ## 目录结构
 
 | 目录 | 内容 |
