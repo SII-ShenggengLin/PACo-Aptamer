@@ -1,57 +1,49 @@
 # -*- coding: utf-8 -*-
-"""Fig 6d | 回顾性审计(方案 A):适配体 vs 结构同条件随机对照的 ΔlogP 双库分布
-+ 家族内 logP–Kd 相关森林图。数据:79/88 号 survey JSON(经 fig6_common 预处理)。
+"""Fig 6d | 适配体 vs 结构同条件随机对照的 Δ log probability 分布(双库)。
+
+数据:79/88 号 survey JSON(经 fig6_common 预处理;AptaDB n=214、UTexas n=228、
+合并均值 +1.95,与正文/图题一致)。跨画廊(panel a)第 1–2 列图像,右缘对齐;
+虚线合并均值按 v1.68 惯例入图例。2026-10-23 第二轮:图例自右上移至左上。
+第四轮:x = 0 的零参考竖线删除 —— 改为 xlim/分箱自 0 起,零由坐标轴左缘
+与刻度标示(全部 442 个 Δ>0,柱均落在轴右侧;图题只引用虚线均值线,
+零线未入图题),左上图例下不再有任何线条可压。
 单独运行:python fig6_d.py → out/fig6_d.{pdf,png}(与拼合版物理尺寸一致)
 """
 import numpy as np
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 import fig6_common as C
-from fig_style import TACO_D, panel_label, save
+from fig_style import NEG, save
 
 
-def draw(fig, gs):
-    from matplotlib import gridspec
-    gsd = gridspec.GridSpecFromSubplotSpec(
-        1, 2, subplot_spec=gs[1, 3:9], width_ratios=[2.2, 1.0], wspace=0.85)
-    axd = fig.add_subplot(gsd[0, 0])
-    panel_label(axd, "d", x=-0.155, y=1.12)
-    bins = np.linspace(min(-0.5, C.D_ALL.min() - 0.2), max(4.5, C.D_ALL.max() + 0.2), 46)
-    axd.hist(C.D_APT, bins=bins, color="#A8A8A4", alpha=0.85, ec="white",
-             lw=0.15, label=f"AptaDB clean (n = {len(C.D_APT)})")
-    axd.hist(C.D_UTX, bins=bins, color="#D8A890", alpha=0.75, ec="white",
-             lw=0.15, label=f"UTexas clean (n = {len(C.D_UTX)})")
-    axd.axvline(0, color="#545450", lw=0.7)
-    axd.axvline(np.mean(C.D_ALL), color="#B07060", lw=0.9, ls="--")
-    axd.text(0.975, 0.62,
-             (f"logP(aptamer) − logP(random | same structure & SS)\n"
-              f"merged n = {len(C.D_ALL)}: mean {np.mean(C.D_ALL):+.2f},\n"
-              f"{100*np.mean(C.D_ALL > 0):.1f}% of interactions above random"),
-             transform=axd.transAxes, ha="right", va="top", fontsize=4.9,
-             bbox=dict(fc="white", ec="#C4C4C0", lw=0.4, pad=1.5))
-    axd.legend(fontsize=4.9, loc="upper left")
-    axd.set_xlabel("Δ log-probability per interaction")
+def draw(fig, L):
+    axd = fig.add_axes(L["d"])
+    C.panel_label_at(fig, "d", C.IMG_X[0], C.ROW3_TOP_IN)
+    bins = np.linspace(0.0, 4.0, 41)
+    axd.hist(C.D_APT, bins=bins, color="#8FA6BB", alpha=0.85, ec="white",
+             lw=0.15)
+    axd.hist(C.D_UTX, bins=bins, color="#D9C3A9", alpha=0.75, ec="white",
+             lw=0.15)
+    axd.axvline(np.mean(C.D_ALL), color=NEG, lw=0.9, ls="--")
+    handles = [
+        Patch(fc="#8FA6BB", ec="none", label=f"AptaDB (n = {len(C.D_APT)})"),
+        Patch(fc="#D9C3A9", ec="none", label=f"UTexas (n = {len(C.D_UTX)})"),
+        Line2D([], [], color=NEG, lw=0.9, ls="--",
+               label=f"merged mean {np.mean(C.D_ALL):+.2f}"),
+    ]
+    axd.legend(handles=handles, loc="upper left", frameon=True,
+               facecolor="white", framealpha=1.0, edgecolor="none",
+               handlelength=1.4, borderaxespad=0.4)
+    axd.set_xlabel("\u0394 log probability per interaction")
     axd.set_ylabel("Interactions")
-
-    axd2 = fig.add_subplot(gsd[0, 1])
-    order = np.argsort(C.FAM_RHO)
-    for i, oi in enumerate(order):
-        col = "#8C8C88" if C.FAM_RHO[oi] >= 0 else "#B07060"
-        axd2.plot([min(C.FAM_RHO[oi], 0), max(C.FAM_RHO[oi], 0)], [i, i],
-                  color=col, lw=1.4, solid_capstyle="round")
-        axd2.scatter([C.FAM_RHO[oi]], [i], s=3 + 2.2 * C.FAM_N[oi], c=col, lw=0)
-    axd2.axvline(0, color="#545450", lw=0.6)
-    axd2.axvline(np.mean(C.FAM_RHO), color=TACO_D, lw=0.8, ls=":")
-    axd2.text(0.97, 1.04,
-              f"within-family ρ(logP, −log$_{{10}}$K$_d$)\n"
-              f"{len(C.FAM_RHO)} families, mean {np.mean(C.FAM_RHO):+.2f} (n.s.)",
-              transform=axd2.transAxes, ha="right", va="bottom", fontsize=4.8)
-    axd2.set_yticks([])
-    axd2.set_xlabel("Spearman ρ")
-    axd2.set_xlim(-1.05, 1.05)
-    return axd, axd2
+    axd.set_xlim(0.0, 4.0)
+    # 第五轮 8 pt 图例变高:ylim 自 ~23 抬到 26,图例底 ~19,越过其下柱顶 17
+    axd.set_ylim(0.0, 26.0)
+    return axd
 
 
 if __name__ == "__main__":
-    fig, gs = C.make_canvas()
-    draw(fig, gs)
+    fig, L = C.make_canvas()
+    draw(fig, L)
     save(fig, "fig6_d")

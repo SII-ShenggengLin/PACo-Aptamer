@@ -16,7 +16,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fig_style import (  # noqa: E402
-    METHOD_COLOR, MM, NATIVE, NEG, TACO, apply_style, load, panel_label, save)
+    METHOD_COLOR, MM, NATIVE, NEG, PACO, apply_style, load, panel_label, save)
 
 apply_style()
 import matplotlib.pyplot as plt  # noqa: E402
@@ -32,7 +32,7 @@ BIN_NAMES = ["≤5Å(界面)", "5-8Å", "8-12Å", "12-20Å", ">20Å"]
 BIN_LAB = ["≤5", "5–8", "8–12", "12–20", ">20"]
 BIN_X = [2.5, 6.5, 10, 16, 25]
 
-MKEY = [("TACo-Aptamer", "TACo_ens2"), ("RhoDesign", "RhoDesign"),
+MKEY = [("PACo-Aptamer", "PACo_ens2"), ("RhoDesign", "RhoDesign"),
         ("AlignIF", "AlignIF"), ("NA-MPNN", "NA-MPNN"), ("gRNAde", "gRNAde")]
 
 # ---------------- 画布 ----------------
@@ -135,7 +135,7 @@ panel_label(axc, "c", x=-0.16, y=1.12)
 crows = [("native", "native", NATIVE), ("gRNAde", "gRNAde", METHOD_COLOR["gRNAde"]),
          ("NA-MPNN", "NA-MPNN", METHOD_COLOR["NA-MPNN"]),
          ("AlignIF", "AlignIF", METHOD_COLOR["AlignIF"]),
-         ("TACo-Aptamer", "TACo_ens2", METHOD_COLOR["TACo-Aptamer"]),
+         ("PACo-Aptamer", "PACo_ens2", METHOD_COLOR["PACo-Aptamer"]),
          ("RhoDesign", "RhoDesign", METHOD_COLOR["RhoDesign"]),
          ("random", "random", NEG)]
 names, vals, cis, cols = [], [], [], []
@@ -178,7 +178,7 @@ axc2.text(0.08, 0.06, "compensatory mutations:\nhigh INF at low identity",
 axf = fig.add_subplot(gs[1, 4:6])
 panel_label(axf, "f", x=-0.28, y=1.12)
 frows = [("native", "native", NATIVE), ("NA-MPNN", "NA-MPNN", METHOD_COLOR["NA-MPNN"]),
-         ("TACo-Aptamer", "TACo", METHOD_COLOR["TACo-Aptamer"]),
+         ("PACo-Aptamer", "PACo", METHOD_COLOR["PACo-Aptamer"]),
          ("RhoDesign", "RhoDesign", METHOD_COLOR["RhoDesign"]),
          ("random-matched", "randmatch", NEG),
          ("gRNAde", "gRNAde", METHOD_COLOR["gRNAde"])]
@@ -197,7 +197,7 @@ for i, (lab, key, col) in enumerate(frows):
     sm = sctm["summary"][key]
     axf.text(1.02, yp, f"{sm['mean']:.3f} · {100*sm['pass_045']:.0f}%",
              va="center", fontsize=4.7, transform=axf.get_yaxis_transform(),
-             fontweight="bold" if key in ("native", "TACo") else "normal")
+             fontweight="bold" if key in ("native", "PACo") else "normal")
 axf.set_yticks(range(len(frows)))
 axf.set_yticklabels([r[0].replace("-Aptamer", "") for r in frows][::-1],
                     fontsize=5.0)
@@ -211,10 +211,10 @@ axf.text(1.02, 5.48, "mean · %pass@0.45", fontsize=4.4,
 # ============ g recovery-matched 负对照 ============
 axg = fig.add_subplot(gs[1, 6:8])
 panel_label(axg, "g", x=-0.19, y=1.12)
-diff = np.array([v["sctm_TACo"] - v["sctm_randmatch"]
+diff = np.array([v["sctm_PACo"] - v["sctm_randmatch"]
                  for v in sctm["per_chain"].values()
-                 if "sctm_TACo" in v and "sctm_randmatch" in v]) * 100
-axg.hist(diff, bins=36, color=TACO, alpha=0.85, ec="white", lw=0.2)
+                 if "sctm_PACo" in v and "sctm_randmatch" in v]) * 100
+axg.hist(diff, bins=36, color=PACO, alpha=0.85, ec="white", lw=0.2)
 axg.axvline(0, color="#545450", lw=0.6)
 axg.axvline(float(np.mean(diff)), color="#2E5F8A", lw=0.9, ls="--")
 axg.text(0.955, 0.92,
@@ -223,7 +223,7 @@ axg.text(0.955, 0.92,
          "recovery-matched random collapses to\ngRNAde level (0.226 vs 0.219)",
          transform=axg.transAxes, ha="right", va="top", fontsize=5.0,
          color="#2E5F8A")
-axg.set_xlabel("scTM(TACo) − scTM(recovery-matched random), pp")
+axg.set_xlabel("scTM(PACo) − scTM(recovery-matched random), pp")
 axg.set_ylabel("Chains")
 
 save(fig, "fig4_ligand_conditioning")

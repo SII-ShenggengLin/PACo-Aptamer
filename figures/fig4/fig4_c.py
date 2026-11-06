@@ -1,65 +1,45 @@
 # -*- coding: utf-8 -*-
-"""Fig 4c | SS 条件保真 INF:多裁判柱状(native 上界 1.0 / random 下界 0.03)
-+ 设计同一性分箱曲线(低同一性下补偿突变保持配对)。
+"""Fig 4c | 每核苷酸恢复率 vs 距配体距离(绝对口径,独立编号面板)。
 
+2026-10-22 起原 c 的双子图拆开各自成面板(c 绝对 / d 归一化),宽度翻倍;
+pocket 底纹与图内 "pocket" 文字删除(≤5 分箱刻度自明)。
+图例(五方法)只画在 c;d 与 c 相邻、同色同序。
 单独运行:python fig4_c.py → out/fig4_c.{pdf,png}(与拼合版物理尺寸一致)
 """
 import numpy as np
-from matplotlib import gridspec
 
 import fig4_common as C
-from fig_style import METHOD_COLOR, NATIVE, NEG, panel_label, save
+from fig_style import METHOD_COLOR, panel_label, save
+
+
+def _series(mkey):
+    vals, lo, hi = [], [], []
+    for bn in C.BIN_NAMES:
+        d = C.P02[mkey][bn]
+        vals.append(100 * d["mean"])
+        lo.append(100 * (d["mean"] - d["ci95"][0]))
+        hi.append(100 * (d["ci95"][1] - d["mean"]))
+    return vals, lo, hi
 
 
 def draw(fig, gs):
-    gsc = gridspec.GridSpecFromSubplotSpec(1, 4, subplot_spec=gs[1, 0:4],
-                                           wspace=2.2)
-    axc = fig.add_subplot(gsc[0, 0:3])
-    panel_label(axc, "c", x=-0.16, y=1.12)
-    crows = [("native", "native", NATIVE),
-             ("gRNAde", "gRNAde", METHOD_COLOR["gRNAde"]),
-             ("NA-MPNN", "NA-MPNN", METHOD_COLOR["NA-MPNN"]),
-             ("AlignIF", "AlignIF", METHOD_COLOR["AlignIF"]),
-             ("TACo-Aptamer", "TACo_ens2", METHOD_COLOR["TACo-Aptamer"]),
-             ("RhoDesign", "RhoDesign", METHOD_COLOR["RhoDesign"]),
-             ("random", "random", NEG)]
-    names, vals, cis, cols = [], [], [], []
-    for lab, key, col in crows:
-        d = C.P03[key]["inf"]
-        names.append(lab); vals.append(d["mean"])
-        cis.append(d["mean"] - d["ci95"][0]); cols.append(col)
-    xc = np.arange(len(names))
-    axc.bar(xc, vals, 0.62, yerr=cis, color=cols,
-            error_kw=dict(lw=0.5, capsize=1.3), ec="white", lw=0.3)
-    for x0, v in zip(xc, vals):
-        axc.text(x0, v + 0.03, f"{v:.3f}", ha="center", fontsize=4.8,
-                 fontweight="bold" if names[int(x0)] in ("native", "random")
-                 else "normal")
-    axc.set_xticks(xc); axc.set_xticklabels(
-        [n.replace("-Aptamer", "") for n in names], rotation=32, ha="right")
-    axc.set_ylabel("SS-fidelity INF (input SS vs refolded design)")
-    axc.set_ylim(0, 1.14)
-    axc.text(0.985, 0.955, "upper bound: native = 1.0\nlower bound: random = 0.03",
-             transform=axc.transAxes, ha="right", va="top", fontsize=4.8,
-             color="#545450")
-
-    axc2 = fig.add_subplot(gsc[0, 3])
-    BIN_KEYS = ["0.0-0.4", "0.4-0.5", "0.5-0.6", "0.6-0.7", "0.7-0.8", "0.8-1.0"]
-    BIN_POS = [0.2, 0.45, 0.55, 0.65, 0.75, 0.9]
+    ax = fig.add_subplot(gs[0, 2])
+    panel_label(ax, "c")
+    x = np.arange(5)
     for mlab, mkey in C.MKEY:
-        d = C.P03[mkey]["inf_by_identity"]
-        ys, xs = [], []
-        for bk, bp in zip(BIN_KEYS, BIN_POS):
-            if bk in d:
-                xs.append(bp); ys.append(d[bk]["inf_mean"])
-        axc2.plot(xs, ys, marker="o", ms=2.2, lw=0.8,
-                  color=METHOD_COLOR[mlab])
-    axc2.set_xlabel("Design identity to native")
-    axc2.set_ylabel("INF")
-    axc2.set_xlim(0.05, 1.0); axc2.set_ylim(0, 1.02)
-    axc2.text(0.08, 0.06, "compensatory mutations:\nhigh INF at low identity",
-              fontsize=4.4, color="#545450", transform=axc2.transAxes)
-    return axc, axc2
+        vals, lo, hi = _series(mkey)
+        ax.errorbar(x, vals, yerr=[lo, hi], marker="o", ms=2.8, lw=0.9,
+                    capsize=1.4, elinewidth=0.5, color=METHOD_COLOR[mlab],
+                    label=mlab)
+    ax.set_xticks(x)
+    ax.set_xticklabels(C.BIN_LAB)
+    ax.set_xlim(-0.45, 4.45)
+    ax.set_ylim(15, 85)
+    ax.set_xlabel("Distance to ligand (Å)")
+    ax.set_ylabel("Recovery (%)")
+    ax.legend(fontsize=6.0, loc="upper left", ncol=2, handlelength=1.2,
+              labelspacing=0.3, columnspacing=0.8, borderaxespad=0.2)
+    return ax
 
 
 if __name__ == "__main__":

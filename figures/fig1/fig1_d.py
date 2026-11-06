@@ -1,62 +1,102 @@
 # -*- coding: utf-8 -*-
-"""Fig 1d | 数据漏斗:PDB → RNA-only/复合物两流 → 双重聚类 → 三重隔离划分。
+"""Fig 1d | Transformer decoder block 细节(对应 a 中自回归解码模块)。
 
-PDB 24,252 → 纯 RNA 池 6,988 / 复合物 868;CD-HIT 0.8 + TM ≥ 0.45 传递闭包
-→ 300 簇 → train/val/test/indep/zs 五路;右侧三层隔离协议要点框。
-单独运行:python fig1_d.py → out/fig1_d.{pdf,png}(与拼合版物理尺寸一致)
+Pre-LN 结构:LayerNorm+masked self-attention → 残差 → LayerNorm+
+cross-attention → 残差 → LayerNorm+FFN → 残差 → softmax → 采样下一个
+核苷酸,采样结果经右侧正交回路送回前缀(autoregressive)。三个子层
+框等宽;模块框白底黑框;标题带与外框齐边。坐标系与物理轴等比。
 """
+from matplotlib.patches import Circle, Rectangle
+
 import fig1_common as C
-from fig_style import panel_label, save
+from fig1_common import fbox, opath, plus, txt
+
+FS = C.FS_BOX
+SM = C.FS_SM
+TINY = C.FS_TINY
 
 
-def draw(fig, gs):
-    axd = fig.add_subplot(gs[1, 2:6])
-    axd.set_xlim(0, 20); axd.set_ylim(0, 10); axd.axis("off")
-    panel_label(axd, "d", x=-0.035, y=1.10)
-    # 顶层
-    C.box(axd, 0.2, 8.35, 5.4, 1.3, C.C_DATA, "PDB RNA entries\n24,252", fs=5.0)
-    # 两流
-    C.arrow(axd, 2.9, 8.35, 2.9, 7.75, rad=0.0)
-    C.box(axd, 0.2, 6.25, 5.4, 1.35, "white",
-          "RNA-only pool\n6,988 chains (→ clustering)", fs=4.8, ec="#C4C4C0")
-    C.arrow(axd, 5.6, 9.0, 8.2, 9.0)
-    C.box(axd, 8.2, 8.35, 5.2, 1.3, C.C_DATA, "RNA–ligand complexes\n868",
-          fs=5.0)
-    C.arrow(axd, 10.8, 8.35, 10.8, 7.75)
-    C.box(axd, 8.2, 6.25, 5.2, 1.35, "white",
-          "768 chains → S2 finetuning\n(+ S1 train chains 1:1)", fs=4.8, ec="#C4C4C0")
-    # 聚类
-    C.arrow(axd, 2.9, 6.25, 6.3, 5.35, rad=-0.15)
-    C.arrow(axd, 10.8, 6.25, 7.5, 5.35, rad=0.15)
-    C.box(axd, 3.6, 3.95, 6.6, 1.35, C.C_SS,
-          "CD-HIT 0.8 + TM ≥ 0.45\ntransitive closure → 300 equivalence classes", fs=4.8)
-    C.arrow(axd, 6.9, 3.95, 6.9, 3.3)
-    # 划分行
-    splits = [("train", "5,773", C.C_MODEL), ("val", "96", C.C_MODEL),
-              ("test", "477", C.C_MET), ("indep", "235", C.C_MET),
-              ("zs", "93", "#F6E3DC")]
-    xw = 3.35
-    for i, (nm, cnt, fc) in enumerate(splits):
-        x0 = 0.55 + i * (xw + 0.28)
-        ec = "#E8A088" if nm == "zs" else C.EC
-        C.box(axd, x0, 1.45, xw, 1.5, fc, f"{nm}\n{cnt}", fs=4.9,
-              ec=ec, lw=0.9 if nm == "zs" else 0.5,
-              bold=(nm == "zs"))
-        C.arrow(axd, 6.9, 3.3, x0 + xw / 2, 3.05, rad=0.0 if i == 2 else
-                (0.12 if i < 2 else -0.12), lw=0.5)
-    axd.text(9.2, 0.55, "cluster-wise 8 : 1 : 1 · 511 chains discarded",
-             fontsize=4.7, color="#545450", ha="center", va="center")
-    axd.annotate("ligand holdout", xy=(16.7, 1.45), xytext=(16.7, 0.55),
-                 fontsize=4.7, color="#B0755F", ha="center", va="center",
-                 arrowprops=dict(arrowstyle="-|>", lw=0.6, color="#B0755F"))
-    C.box(axd, 14.0, 5.3, 5.8, 4.35, "white",
-          "Three-layer isolation\n\n• cluster-based holdout (TM ≥ 0.45)\n"
-          "• temporal split (2024+)\n• ligand holdout\n"
-          "  (test ligands unseen)", fs=4.7, ec="#C4C4C0")
-    return axd
+def draw(ax):
+    # v1.48 面板收窄(xlim 9.597→8.884,行宽让给 b)并内容整体左移
+    # 0.30 重新居中:v1.47 加宽后两侧留白 ~0.7/0.6 偏大(用户反馈),
+    # 收窄居中后两侧各 ~0.45
+    C.panel_frame(ax, 0.24, 0.24, 8.40, 9.52, "Transformer decoder ×3",
+                  fs=C.FS_HEAD, bh=0.84)
+    cx = 4.51
 
+    # ---- 输入:已生成前缀(A U G + 虚线下一格) ----
+    for k, ch in enumerate("AUG"):
+        x0 = 3.30 + k * 0.62
+        ax.add_patch(Rectangle((x0, 0.85), 0.56, 0.50, fc=C.NT_COLORS[ch],
+                               ec="white", lw=0.5, zorder=3))
+        txt(ax, x0 + 0.28, 1.10, ch, fs=SM, color="white", weight="bold",
+            z=4)
+    fbox(ax, 5.16, 0.85, 0.56, 0.50, ls=(0, (3, 2)), r=0.02)
+    txt(ax, cx, 0.52, "Partial sequence", fs=SM)
+
+    # ---- LayerNorm + masked self-attention → ⊕ ----
+    opath(ax, [(cx, 1.35), (cx, 1.95)], ms=4.5)
+    ax.add_patch(Circle((cx, 1.65), 0.05, fc="black", ec="none", zorder=6))
+    fbox(ax, 2.01, 1.95, 5.00, 0.80)
+    txt(ax, cx, 2.50, "LayerNorm + masked", fs=SM)
+    txt(ax, cx, 2.20, "self-attention", fs=SM)
+    opath(ax, [(cx, 2.75), (cx, 3.21)], ms=4.5)
+    plus(ax, cx, 3.35)
+    # 残差 1(块输入 → ⊕1)
+    ax.plot([cx, 1.65, 1.65, 4.37], [1.65, 1.65, 3.35, 3.35],
+            color=C.C_EDGE, lw=0.7, zorder=2, solid_capstyle="round")
+
+    # ---- LayerNorm + cross-attention → ⊕ ----
+    opath(ax, [(cx, 3.49), (cx, 4.05)], ms=4.5)
+    ax.add_patch(Circle((cx, 3.77), 0.05, fc="black", ec="none", zorder=6))
+    fbox(ax, 2.01, 4.05, 5.00, 0.70)
+    txt(ax, cx, 4.40, "LayerNorm + cross-attention", fs=SM)
+    opath(ax, [(cx, 4.75), (cx, 5.21)], ms=4.5)
+    plus(ax, cx, 5.35)
+    # 残差 2(⊕1 后 → ⊕2)
+    ax.plot([cx, 1.20, 1.20, 4.37], [3.77, 3.77, 5.35, 5.35],
+            color=C.C_EDGE, lw=0.7, zorder=2, solid_capstyle="round")
+
+    # ---- LayerNorm + FFN → ⊕ ----
+    opath(ax, [(cx, 5.49), (cx, 6.05)], ms=4.5)
+    ax.add_patch(Circle((cx, 5.77), 0.05, fc="black", ec="none", zorder=6))
+    fbox(ax, 2.01, 6.05, 5.00, 0.70)
+    txt(ax, cx, 6.40, "LayerNorm + FFN", fs=SM)
+    opath(ax, [(cx, 6.75), (cx, 7.16)], ms=4.5)
+    plus(ax, cx, 7.30)
+    # 残差 3(⊕2 后 → ⊕3)
+    ax.plot([cx, 0.75, 0.75, 4.37], [5.77, 5.77, 7.30, 7.30],
+            color=C.C_EDGE, lw=0.7, zorder=2, solid_capstyle="round")
+
+    # ---- softmax → 采样 ----
+    opath(ax, [(cx, 7.44), (cx, 8.00)], ms=4.5)
+    for k, (h, ch) in enumerate(zip((0.34, 0.22, 0.48, 0.13), "ACGU")):
+        x0 = 3.59 + k * 0.50
+        ax.add_patch(Rectangle((x0, 8.00), 0.34, h, fc=C.NT_COLORS[ch],
+                               ec="black", lw=0.5, zorder=3))
+        txt(ax, x0 + 0.17, 7.72, ch, fs=TINY)
+    txt(ax, cx, 8.66, "P(next)", fs=TINY)
+    fbox(ax, 5.90, 7.99, 0.56, 0.50, r=0.02)
+    txt(ax, 6.18, 8.24, "G", fs=SM)
+    opath(ax, [(5.45, 8.24), (5.90, 8.24)], ms=4.5)
+    txt(ax, 6.18, 7.75, "Sample", fs=TINY)
+
+    # ---- 自回归回路(右侧正交折线:样本 → 前缀虚线格) ----
+    # v1.35 顶部横线 8.88→8.74(P(next) 8.74→8.66):标题带加高后
+    # 与带底(8.92)保持净空
+    opath(ax, [(6.18, 8.49), (6.18, 8.74), (7.45, 8.74), (7.45, 1.10),
+               (5.72, 1.10)], ms=4.5)
+    # 旋转标签在回路线(7.45)与面板框右边(8.64)之间居中(v1.48 随
+    # 内容左移与框收窄,8.55→8.05)
+    txt(ax, 8.05, 4.75, "Autoregressive", fs=SM, rotation=90)
 
 if __name__ == "__main__":
-    fig, gs = C.make_canvas()
-    draw(fig, gs)
-    save(fig, "fig1_d")
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(C.FIG_W_IN, C.FIG_H_IN), dpi=C.DPI)
+    ax = fig.add_axes([C.RECT_BX[2], C.RECT_BCD_Y[0],
+                     C.RECT_BCD_WD, C.RECT_BCD_Y[1]])
+    ax.set_xlim(C.D_LIM[0], C.D_LIM[1])
+    ax.set_ylim(C.D_LIM[2], C.D_LIM[3])
+    ax.axis("off")
+    draw(ax)
+    C.save(fig, "fig1_d")

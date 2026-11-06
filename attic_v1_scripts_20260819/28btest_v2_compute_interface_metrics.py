@@ -3,7 +3,7 @@
 
 界面定义：配体重原子 5.0Å 内 RNA 残基（44 号脚本标注，eval_inputs_v2 覆盖 test 全链）
 口径与 28v2（A 层）完全一致：3 温度全池内 best（gRNAde/RhoDesign 各 300 池）。
-TACo 无界面字段（38 号评估不保存序列池，如实注明）。
+PACo 无界面字段（38 号评估不保存序列池，如实注明）。
 输入：eval_inputs_v2/*.json（界面标注）+ grnade_out_btest_v2 + rhodesign_out_btest_v2
 输出：survey/interface_metrics_btest_v2.json（B 层专用，勿覆盖 A 层 interface_metrics_v2.json）
 """

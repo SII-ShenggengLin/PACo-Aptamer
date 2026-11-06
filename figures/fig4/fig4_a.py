@@ -1,53 +1,54 @@
 # -*- coding: utf-8 -*-
-"""Fig 4a | 消融双口径表:全局 best / 界面 best / Δ(界面−整体) / vs full (pp, P)。
+"""Fig 4a | 消融哑铃图:每变体一对点(全局 best / 界面 best),灰线相连。
 
-300 样本池(3T×100);Full model 行雾蓝底;脚注说明单模型族口径。
+2026-10-22 起由表格改为图(同图类型多样化;表格脚注文字全部删除,
+口径说明移入图注)。口径编码沿用全图惯例:实心点 = 全局(477 测试链),
+半透明点 = 界面(115 条 <5 Å 界面链);数值标在点旁,不加粗。
+x 轴 60–90% 放大,使单模型家族 0.6–0.8% 的全局差异可读。
 单独运行:python fig4_a.py → out/fig4_a.{pdf,png}(与拼合版物理尺寸一致)
 """
+import numpy as np
+from matplotlib.lines import Line2D
+
 import fig4_common as C
-from fig_style import panel_label, save
+from fig_style import PACO, panel_label, save
+
+ROWS = [("Full model", "baseline"),
+        ("− ensemble", "no_ensemble"),
+        ("− SS conditioning", "no_ss"),
+        ("− augmentation", "no_aug"),
+        ("− ligand context", "no_ligand")]
 
 
 def draw(fig, gs):
-    axa = fig.add_subplot(gs[0, 0:3]); axa.axis("off")
-    panel_label(axa, "a", x=-0.062, y=1.06)
-    rows_abl = [("Full model (ens2)", "baseline"),
-                ("– ensemble (single)", "no_ensemble"),
-                ("– SS conditioning", "no_ss"),
-                ("– data augmentation", "no_aug"),
-                ("– ligand context", "no_ligand")]
-    hdr = ["Model variant", "Global\nbest (%)", "Interface\nbest (%)",
-           "Δ (iface–\noverall, pp)", "Iface Δ vs full\n(pp, P)"]
-    cell = []
-    for lab, key in rows_abl:
+    axa = fig.add_subplot(gs[0, 0])
+    panel_label(axa, "a")
+    ys = np.arange(len(ROWS))[::-1]          # Full model 在最上
+    for y, (_, key) in zip(ys, ROWS):
         r = C.P00[key]
-        iface_b = 100 * r["iface"]["iface_best"]
-        delta_io = 100 * r["iface"]["iface_minus_overall"]
-        if key == "baseline":
-            pcell = "—"
-        else:
-            vb = r["vs_baseline_iface"]
-            # vb.delta_iface_best = baseline − variant(界面口径)
-            dvar = -100 * vb["delta_iface_best"]
-            pcell = f"{dvar:+.2f} (P={vb['wilcoxon_p_one_sided']:.3f})" \
-                if vb["wilcoxon_p_one_sided"] >= 0.001 else \
-                f"{dvar:+.2f} (P={vb['wilcoxon_p_one_sided']:.4f})"
-        cell.append([lab, f"{100*r['global_best_477']:.2f}", f"{iface_b:.2f}",
-                     f"{delta_io:+.2f}", pcell])
-    tb = axa.table(cellText=cell, colLabels=hdr, loc="center", cellLoc="center")
-    tb.auto_set_font_size(False); tb.set_fontsize(4.9); tb.scale(1, 1.62)
-    for (i, j), c in tb.get_celld().items():
-        c.set_linewidth(0.4); c.set_edgecolor("#C4C4C0")
-        if i == 0:
-            c.set_facecolor("#EFEDEA"); c.set_text_props(fontweight="bold")
-        elif i == 1:
-            c.set_facecolor("#EDF2F7")
-    axa.text(0.5, 0.010,
-             "300-sample pools (3 T × 100) · final noiface recipe · global = test 477 chains\n"
-             "interface = 115 ligand-contact chains (<5 Å; 100 with ≥3 interface residues);\n"
-             "rows 2–5 are single models — within that family, component removals cost\n"
-             "0.6–0.8 pp globally (interface effects n.s. at this pool size)",
-             transform=axa.transAxes, ha="center", fontsize=4.5, color="#545450")
+        g = 100 * r["global_best_477"]
+        i = 100 * r["iface"]["iface_best"]
+        axa.plot([g, i], [y, y], color="#B7B0A2", lw=1.1, zorder=2)
+        axa.plot(g, y, "o", ms=4.2, mfc=PACO, mec="white", mew=0.4, zorder=3)
+        axa.plot(i, y, "o", ms=4.2, mfc=PACO, mec="white", mew=0.4,
+                 alpha=0.45, zorder=3)
+        axa.text(g - 0.7, y, f"{g:.1f}", ha="right", va="center", fontsize=5.2)
+        axa.text(i + 0.7, y, f"{i:.1f}", ha="left", va="center", fontsize=5.2)
+    axa.set_yticks(ys)
+    axa.set_yticklabels([lab for lab, _ in ROWS])
+    axa.set_xlim(60, 90)
+    axa.set_ylim(-0.5, 5.15)
+    axa.set_xticks([60, 65, 70, 75, 80, 85, 90])
+    axa.set_xlabel("Recovery, best sample per chain (%)")
+    # 双行单列图例置于顶部空带(6 pt 下单行双列宽约 52 mm 超出面板)
+    axa.legend(handles=[
+        Line2D([], [], marker="o", ls="none", ms=4.2, markerfacecolor="0.25",
+               markeredgecolor="none", label="global (filled)"),
+        Line2D([], [], marker="o", ls="none", ms=4.2, markerfacecolor="0.25",
+               markeredgecolor="none", alpha=0.45,
+               label="interface (translucent)")],
+        loc="upper left", fontsize=6.0, handlelength=1.2,
+        handletextpad=0.4, borderaxespad=0.2, labelspacing=0.35)
     return axa
 
 

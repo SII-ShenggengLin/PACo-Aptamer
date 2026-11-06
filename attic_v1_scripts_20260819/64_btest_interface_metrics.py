@@ -5,7 +5,7 @@
 - native = canonical_v2.json（'N' 位跳过）
 - 输出池：grnade_out_btest_v2 / rhodesign_out_btest_v2（3 温度全池）/
   nampnn_out_btest_v2（t=0.1×10，缺 C1' 链用有效位）/ alignif_out_btest_v2（t=0.1×20，'-' 跳过）
-- TACo 无序列池（38 号不保存序列）→ 不出界面指标（报告如实注明）
+- PACo 无序列池（38 号不保存序列）→ 不出界面指标（报告如实注明）
 - 界面标注：eval_inputs_v2/{pdb}.json（44 号，配体 5.0Å），残基序号映射用 canonical PDB
 输出：survey/interface_metrics_btest_v2.json（覆盖旧版——旧版为 pre-canonical 口径，作废）
 """

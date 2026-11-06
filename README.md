@@ -10,15 +10,16 @@ RNA 三级结构逆折叠（inverse folding）研究项目：AlignIF 复现与�
 | `paper/` | 论文手稿（`manuscript.md`） |
 | `figures/` | 论文图 fig1–fig5 及各自生成脚本 |
 | `attic_v1_scripts_20260819/` | v1 版数据管线脚本存档（链拆分、聚类、划分、转换等） |
+| `data/*.py`、`data/*.sh` | 当前数据管线、训练、推理与评测脚本 |
 | `data/splits_v2/` | 精选数据划分定义（聚类结果、train/val/test 划分、序列汇总） |
-| `tools/TACoAptamer/`、`tools/USalign/` | 无独立 git 仓库的小工具源码（随本仓库提交） |
+| `tools/PACoAptamer/`、`tools/USalign/` | 无独立 git 仓库的小工具源码（随本仓库提交） |
 
 ## 不在 git 内的大文件
 
-以下目录体积过大（合计 >135G），仅在服务器上维护，不纳入版本库：
+以下目录体积过大（合计 >135G），仅在服务器上维护，不纳入版本库；论文复现所需精选数据通过 Zenodo 发布：
 
-- `data/`（除 `splits_v2/` 外）：RCSB PDB/CIF 原始数据及衍生数据集（`rcsb_pdb/`、`rcsb_cif/`、`alignif/`、`canonical_v2/` 等）
-- `models/`：各方法（AlignIF、ODesign、gRNAde、RhoDesign、NA-MPNN、TACoAptamer 等）的训练权重与 checkpoint
+- `data/`（除根目录脚本和 `splits_v2/` 外）：RCSB PDB/CIF 原始数据及衍生数据集（`rcsb_pdb/`、`rcsb_cif/`、`alignif/`、`canonical_v2/` 等）
+- `models/`：各方法（AlignIF、ODesign、gRNAde、RhoDesign、NA-MPNN、PACoAptamer 等）的训练权重与 checkpoint
 - `tmp/`：临时工作区
 
 `tools/` 下带独立 git remote 的第三方仓库也不提交，需要时自行克隆：

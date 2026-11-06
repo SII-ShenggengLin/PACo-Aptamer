@@ -11,7 +11,7 @@
 
 - **内容**:57 个假结靶标四轮盲测,AI(NA-MPNN 定骨架/RFdiff 版、gRNAde(+no3d 变体)、Struct2SeQ 深度 Q 强化学习、Rosetta、3DRNA)对比 Eterna 资深人类设计师;SHAPE 化学映射(~5 万条)+ 补偿突变 M2R-seq + cryo-EM 三层湿验证。AI 一年内追平人类,>95% 靶标可解;关键使能 = **RNet**(RibonanzaNet,~1100 万参数,训练于 ~200 万条 Eterna/RMDB 化学映射测量)做设计前瞻过滤。最佳设计 cryo-EM 达 2.9–4.8Å,全部 7 个 stem 形成(F1 0.89–0.95),但呈现**未被设计也未被 AF3 预测**的非规范三级相互作用。
 - **中心思想**:不依赖 3D 结构预测、SS 中心+实验数据基础模型即可做 de novo RNA 设计。
-- **与本项目零冲突**:全程**无配体条件下探测**(原文明言:假结形成要反映设计而非配体稳定;W03 c-di-GMP 核糖开关靶标挑战恰是"不靠配体也能折");所有参赛方法均不以靶标为条件。其 Discussion 明言 pocket 级高分辨率建模"对设计 RNA 催化剂与 **aptamer** 仍是一个重要挑战"——正是 TACo-Aptamer 的定位。
+- **与本项目零冲突**:全程**无配体条件下探测**(原文明言:假结形成要反映设计而非配体稳定;W03 c-di-GMP 核糖开关靶标挑战恰是"不靠配体也能折");所有参赛方法均不以靶标为条件。其 Discussion 明言 pocket 级高分辨率建模"对设计 RNA 催化剂与 **aptamer** 仍是一个重要挑战"——正是 PACo-Aptamer 的定位。
 - 基线选择被背书:OpenKnot 场上最强的深度学习方法 = NA-MPNN 与 gRNAde(本项目重训基线)。
 
 ## 二、手稿改动(①②③ + 审计句)
@@ -33,7 +33,7 @@
 **方法**(`data/89_rnet_leakage_audit.py`):
 - 对象:RMDB 全库 1,024 个 RDAT(CC0,GitHub DasLab/rmdb.github.io 五个 data-* release,共 12.5GB,存 `data/rmdb_audit/`)——RNet 训练数据(Eterna 化学映射)的上游来源;Kaggle 原始 train_data.csv 需登录,但所有已测量序列均出自 RMDB。
 - 序列提取:两种 RDAT 载体全覆盖——BigLib 型 `ANNOTATION_DATA:…sequence:` 字段(含全部已测突变体)与经典 M2 型 `SEQUENCE` 野生型 + `mutation:G126C` 重建(**格式为"参考碱基+位置+新碱基"**,按 OFFSET 换算;首版解析反了已修)。共扫描 **4,525,354 条实测序列**(含重建突变体 8,868 条)。
-- 原生序列:`data/splits_v2/seqs_all.json`(canonical,完整覆盖三层;⚠️ taco_s1_v2 缓存缺 indep 全部与 zs 的 2024+ 部分,首版用了缓存导致漏审,已改数据源)——去重后 422 条(test 255 / indep 130 / zs 37;test 中位长仅 43nt,多拷贝晶体链致 477→255)。
+- 原生序列:`data/splits_v2/seqs_all.json`(canonical,完整覆盖三层;⚠️ paco_s1_v2 缓存缺 indep 全部与 zs 的 2024+ 部分,首版用了缓存导致漏审,已改数据源)——去重后 422 条(test 255 / indep 130 / zs 37;test 中位长仅 43nt,多拷贝晶体链致 477→255)。
 - 匹配:12-mer 精确共享预筛(2-bit 编码 numpy;**逐对计数**——12-mer 对 9k 原生并集的随机碰撞高,跨对聚合会爆候选)→ edlib 精验证三级口径:精确 / 全局相似 ≥0.8 / 双向 HW 嵌入 ≤10% 编辑;另报 ≥6 共享 12-mer 的片段嫌疑。
 - 耗时 25 分钟(CPU)。产物:`survey/89_rnet_leakage_audit.json` + `89_audit.log`。
 

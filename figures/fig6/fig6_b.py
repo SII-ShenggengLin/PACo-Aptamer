@@ -1,82 +1,71 @@
 # -*- coding: utf-8 -*-
-"""Fig 6b | 逐位恢复序列条(8HZD_A:native + 5 方法最优设计)。
+"""Fig 6b | 8HZD_A 案例结构(PyMOL 渲染嵌入 + 格题/注记)。
 
-行 = native + 各方法 best sample;列 = 序列位置;填色 = 与 native 一致;
-顶部橙色带 = 界面位置(任一原子 <5 Å of N618/O2I,链 A 残基 7/8/14/15/28/29/30);
-右侧两列 = 整体恢复率 % 与界面位恢复率 %。
+左 全景:链 A cartoon 灰绿 + 界面残基(<5 Å N618)雾蓝段 + 链 B 淡灰 + N618 stick
+右 口袋放大(<8 Å,同取向)
+两幅渲染列心对齐画廊(panel a)前两列(2026-10-23 第三轮起显示宽 = 列宽的
+0.75,自画廊图像宽 0.62 放大,面板不再显扁);每幅渲染上下各一行文字
+(与画廊格的 格题/注记 排版一致):
+  左  上 8HZD_A · N618            下 7 interface residues (<5 Å)
+  右  上 pocket close-up (<8 Å)    下 interface residues 7/8/14/15/28/29/30
+渲染图内不嵌字(旧 N618 标签/残基号在打印宽下压叠不可读)。
+axes 精确包裹渲染图(高按 PNG 实际宽高比),标题 pad/注记偏移与画廊一致;
+整格(格题 + 渲染 + 注记)在 b/c 行内垂直居中。编号 b 仍锚定画廊列 1 图像
+左缘(panel_label_at),与编号 a/d 成列对齐。
 单独运行:python fig6_b.py → out/fig6_b.{pdf,png}(与拼合版物理尺寸一致)
 """
-import numpy as np
+import matplotlib
+import matplotlib.image
 
 import fig6_common as C
-from fig_style import METHOD_COLOR, METHOD_ORDER, panel_label, save
+from fig_style import save
 
-import matplotlib.pyplot as plt
+TITLE_FS, CAP_FS = 8.5, 7.5          # 与画廊格题 8.5 / 注记 7.5 一致(第五轮)
+TITLE_PAD, CAP_OFFSET = 3.5, 5.0     # pt,同 fig6_gallery
+TITLE_BAND_IN = 0.187                # 格题带高(pad 3.5 pt + 8.5 pt 行高)
+CAP_BAND_IN = 0.173                  # 注记带高(偏移 5 pt + 7.5 pt 行高)
 
 
-def draw(fig, gs):
-    axb = fig.add_subplot(gs[0, 7:16])
-    panel_label(axb, "c", x=-0.075, y=1.10)
-    rows = [("native", C.natA, None, None)] + [
-        (m, C.SEQS[m][0], C.SEQS[m][1], None) for m in METHOD_ORDER]
-    L = len(C.natA)
-    iface_pos = [C.RESIDS.index(rn) for rn in C.IFACE]   # 0 基序列位置
+def _cell_rect(png_path, col):
+    """第 col 列渲染图的 axes 矩形(fig fraction):宽 = 列宽 × 0.75、列心
+    对齐,高按 PNG 实际宽高比;整格在 b/c 行内垂直居中。"""
+    img = matplotlib.image.imread(png_path)
+    w_in = C.B_IMG_W_IN
+    h_in = w_in * img.shape[0] / img.shape[1]
+    x0_in = C.COLS[col] * C.FIG_W_IN + (C.CELL_IN - w_in) / 2
+    slack = max(0.0, C.ROW2_H_IN - TITLE_BAND_IN - h_in - CAP_BAND_IN)
+    top_in = C.ROW2_TOP_IN + slack / 2 + TITLE_BAND_IN
+    return [x0_in / C.FIG_W_IN,
+            (C.FIG_H_IN - top_in - h_in) / C.FIG_H_IN,
+            w_in / C.FIG_W_IN, h_in / C.FIG_H_IN]
 
-    def iface_id(seq):
-        return np.mean([seq[p] == C.natA[p] for p in iface_pos])
 
-    for ri, (name, sq, bv, _) in enumerate(rows):
-        y0 = len(rows) - 1 - ri
-        if name == "native":
-            for pi, ch_ in enumerate(sq):
-                axb.text(pi + 0.5, y0 + 0.5, ch_, ha="center", va="center",
-                         fontsize=4.9, fontweight="bold", color="#3D5A45")
-            axb.text(-1.2, y0 + 0.5, "native", ha="right", va="center",
-                     fontsize=5.2, fontweight="bold", color="#3D5A45")
-            continue
-        col = METHOD_COLOR[name]
-        for pi, ch_ in enumerate(sq):
-            match = ch_ == C.natA[pi]
-            axb.add_patch(plt.Rectangle((pi, y0), 1, 1,
-                                        fc=col if match else "white",
-                                        ec="#E4E2DE", lw=0.3))
-            axb.text(pi + 0.5, y0 + 0.5, ch_, ha="center", va="center",
-                     fontsize=4.6, color="white" if match else "#8C8C88")
-        axb.text(-1.2, y0 + 0.5, name.replace("-Aptamer", ""), ha="right",
-                 va="center", fontsize=5.2, color=col)
-        fi = iface_id(sq)
-        axb.text(L + 1.0, y0 + 0.5, f"{100*bv:.0f}%", ha="left",
-                 va="center", fontsize=5.0,
-                 fontweight="bold" if name == "TACo-Aptamer" else "normal",
-                 color=col)
-        axb.text(L + 3.6, y0 + 0.5, f"{100*fi:.0f}%", ha="left",
-                 va="center", fontsize=5.0,
-                 fontweight="bold" if name == "TACo-Aptamer" else "normal",
-                 color=col)
-    for pi in iface_pos:
-        axb.add_patch(plt.Rectangle((pi, len(rows) - 0.1), 1, 0.42, fc="#E8A088",
-                                    ec="none"))
-    axb.text(np.mean(iface_pos) + 0.5, len(rows) + 0.55,
-             f"interface positions (< {C.CONTACT:.0f} Å of N618)",
-             ha="center", fontsize=4.6, color="#B0755F")
-    axb.text(L + 1.0, len(rows) - 0.55, "identity", ha="left", fontsize=4.4,
-             color="#545450")
-    axb.text(L + 3.6, len(rows) - 0.55, "iface", ha="left", fontsize=4.4,
-             color="#545450")
-    axb.set_xlim(-6.5, L + 6.5)
-    axb.set_ylim(-0.3, len(rows) + 1.15)
-    axb.axis("off")
-    axb.set_title("Best sample designs, 8HZD_A (filled = match to native)",
-                  fontsize=5.4, pad=8)
-    return axb
+def _draw_cell(fig, Ldict, key, png_path, col, title, caption):
+    rect = _cell_rect(png_path, col)
+    Ldict[key] = rect                      # 覆盖占位矩形,供审计/复用
+    ax = fig.add_axes(rect)
+    img = matplotlib.image.imread(png_path)
+    ax.imshow(img, interpolation="none")
+    ax.set_axis_off()
+    ax.set_title(title, fontsize=TITLE_FS, pad=TITLE_PAD)
+    ax.annotate(caption, xy=(0.5, 0), xycoords="axes fraction",
+                xytext=(0, -CAP_OFFSET), textcoords="offset points",
+                ha="center", va="top", fontsize=CAP_FS)
+    return ax
+
+
+def draw(fig, L):
+    ax1 = _draw_cell(fig, L, "b1", C.PYMOL_OVERVIEW, 0,
+                     "8HZD_A \u00b7 N618", "7 interface residues (<5 \u00c5)")
+    C.panel_label_at(fig, "b", C.IMG_X[0], C.ROW2_TOP_IN, size=10)
+    _draw_cell(fig, L, "b2", C.PYMOL_POCKET, 1,
+               "pocket close-up (<8 \u00c5)",
+               "interface residues 7/8/14/15/28/29/30")
+    return ax1
 
 
 if __name__ == "__main__":
-    fig, gs = C.make_canvas()
-    draw(fig, gs)
-    save(fig, "fig6_c")
-    for m in METHOD_ORDER:
-        s, v = C.SEQS[m]
-        ii = np.mean([s[p] == C.natA[p] for p in
-                      [C.RESIDS.index(rn) for rn in C.IFACE]])
-        print(f"{m:14s} overall {100*v:5.1f}%  iface {100*ii:5.1f}%")
+    fig, _L = C.make_canvas()
+    draw(fig, _L)
+    save(fig, "fig6_b")
+    print("iface residues:", C.IFACE)

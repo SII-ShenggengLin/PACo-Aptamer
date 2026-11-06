@@ -16,7 +16,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fig_style import (  # noqa: E402
-    GRNADE, METHOD_COLOR, METHOD_ORDER, MM, NATIVE, RHODESIGN, TACO,
+    GRNADE, METHOD_COLOR, METHOD_ORDER, MM, NATIVE, RHODESIGN, PACO,
     apply_style, load, panel_label, save)
 
 
@@ -48,7 +48,7 @@ gs = gridspec.GridSpec(2, 5, figure=fig, hspace=0.52, wspace=1.15,
 axa = fig.add_subplot(gs[0, 0:2])
 panel_label(axa, "a", x=-0.19, y=1.12)
 temps = ["t=0.1", "t=0.5", "t=1.0"]
-for m in ["TACo", "RhoDesign", "gRNAde"]:
+for m in ["PACo", "RhoDesign", "gRNAde"]:
     xs = [100 * td[m][t]["div"]["mean"] for t in temps]
     ys = [100 * td[m][t]["rec"]["mean"] for t in temps]
     base = METHOD_COLOR[m]
@@ -56,12 +56,12 @@ for m in ["TACo", "RhoDesign", "gRNAde"]:
     axa.plot(xs, ys, color=base, lw=0.7, alpha=0.7, zorder=2)
     for x, y, c, t in zip(xs, ys, shades, temps):
         axa.scatter(x, y, s=16, c=[c], edgecolors=base, linewidths=0.6, zorder=3)
-axa.annotate("t = 0.1", (23.9, 59.6), fontsize=5.0, color=TACO,
+axa.annotate("t = 0.1", (23.9, 59.6), fontsize=5.0, color=PACO,
              xytext=(25.8, 64.6), textcoords="data",
-             arrowprops=dict(arrowstyle="-", lw=0.5, color=TACO))
-axa.annotate("t = 1.0", (31.5, 58.4), fontsize=5.0, color=TACO,
+             arrowprops=dict(arrowstyle="-", lw=0.5, color=PACO))
+axa.annotate("t = 1.0", (31.5, 58.4), fontsize=5.0, color=PACO,
              xytext=(33.8, 62.5), textcoords="data", ha="right",
-             arrowprops=dict(arrowstyle="-", lw=0.5, color=TACO))
+             arrowprops=dict(arrowstyle="-", lw=0.5, color=PACO))
 axa.annotate("t = 0.1, uniq 0.88", (8.2, 54.6), fontsize=4.8, color=RHODESIGN,
              xytext=(11.0, 58.8), textcoords="data",
              arrowprops=dict(arrowstyle="-", lw=0.5, color=RHODESIGN))
@@ -75,9 +75,9 @@ axa.text(5.0, 26.0, "random", fontsize=4.6, color="#B07060", ha="left")
 axa.set_xlabel("Pool diversity (mean pairwise distance)")
 axa.set_ylabel("Recovery, t-mean (%)")
 handles = [Line2D([], [], marker="o", ls="-", color=METHOD_COLOR[m],
-                  label=m if m != "TACo" else "TACo-Aptamer",
+                  label=m if m != "PACo" else "PACo-Aptamer",
                   markersize=3.5, markerfacecolor=_lighten(METHOD_COLOR[m], 0.35))
-           for m in ["TACo", "RhoDesign", "gRNAde"]]
+           for m in ["PACo", "RhoDesign", "gRNAde"]]
 axa.legend(handles=handles, loc="lower left", fontsize=5.0)
 axa.set_xlim(4, 36)
 
@@ -85,7 +85,7 @@ axa.set_xlim(4, 36)
 axb = fig.add_subplot(gs[0, 2:5])
 panel_label(axb, "b", x=-0.09, y=1.12)
 for m in METHOD_ORDER:
-    k = "TACo" if m == "TACo-Aptamer" else m
+    k = "PACo" if m == "PACo-Aptamer" else m
     rc = np.array(nov["methods"][k]["train"]["rank_curve"])
     xq = np.linspace(0, 1, len(rc))
     axb.plot(xq, rc, lw=0.9, color=METHOD_COLOR[m],
@@ -94,7 +94,7 @@ for m in METHOD_ORDER:
 axb.axhline(0.8, color="#B07060", lw=0.5, ls=":")
 axb.text(0.99, 0.815, "identity = 0.8", fontsize=4.6, color="#B07060",
          ha="right", va="bottom")
-med_apt = {m: nov["methods"]["TACo" if m == "TACo-Aptamer" else m]["aptadb"]["median"] for m in METHOD_ORDER}
+med_apt = {m: nov["methods"]["PACo" if m == "PACo-Aptamer" else m]["aptadb"]["median"] for m in METHOD_ORDER}
 for i, m in enumerate(METHOD_ORDER):
     axb.scatter([1.012], [med_apt[m]], marker="|", s=30, lw=1.0,
                 color=METHOD_COLOR[m], clip_on=False)
@@ -111,7 +111,7 @@ axc = fig.add_subplot(gs[1, 0:3])
 panel_label(axc, "c", x=-0.13, y=1.12)
 lab = np.array(ts["label"]); x = np.array(ts["x"]); y = np.array(ts["y"])
 for m in METHOD_ORDER:
-    key = "TACo" if m == "TACo-Aptamer" else m
+    key = "PACo" if m == "PACo-Aptamer" else m
     sel = lab == key
     axc.scatter(x[sel], y[sel], s=1.2, c=METHOD_COLOR[m], alpha=0.30, lw=0)
 sel = lab == "native"
@@ -121,7 +121,7 @@ axc.set_xticks([]); axc.set_yticks([])
 axc.set_xlabel("t-SNE 1"); axc.set_ylabel("t-SNE 2")
 handles = [Line2D([], [], marker="o", ls="", color=METHOD_COLOR[m],
                   markersize=3, alpha=0.9,
-                  label=m if m != "TACo-Aptamer" else "TACo-Aptamer")
+                  label=m if m != "PACo-Aptamer" else "PACo-Aptamer")
            for m in METHOD_ORDER]
 handles.append(Line2D([], [], marker="x", ls="", color="#3D5A45",
                       markersize=4, label="native"))
@@ -134,10 +134,10 @@ axc.text(0.015, 0.02, "60 test chains × 30 designs per method (t = 0.1 pools), 
 axd = fig.add_subplot(gs[1, 3])
 panel_label(axd, "d", x=-0.30, y=1.12)
 mm = METHOD_ORDER
-kvm = [kl["methods"][("TACo" if m == "TACo-Aptamer" else m)]["kl_mean"]
+kvm = [kl["methods"][("PACo" if m == "PACo-Aptamer" else m)]["kl_mean"]
        for m in mm]
-kci = [kl["methods"][("TACo" if m == "TACo-Aptamer" else m)]["kl_mean"] -
-       kl["methods"][("TACo" if m == "TACo-Aptamer" else m)]["ci95"][0]
+kci = [kl["methods"][("PACo" if m == "PACo-Aptamer" else m)]["kl_mean"] -
+       kl["methods"][("PACo" if m == "PACo-Aptamer" else m)]["ci95"][0]
        for m in mm]
 xd = np.arange(len(mm))
 axd.bar(xd, kvm, 0.62, yerr=kci, color=[METHOD_COLOR[m] for m in mm],
@@ -160,11 +160,11 @@ panel_label(axe, "e", x=-0.30, y=1.12)
 nat = gc["native_ref"]
 axd0 = None
 LBL = {  # (文字锚点偏移, ha)
-    "TACo": ((2.2, 0.018), "left"), "RhoDesign": ((-2.2, -0.030), "right"),
+    "PACo": ((2.2, 0.018), "left"), "RhoDesign": ((-2.2, -0.030), "right"),
     "AlignIF": ((2.2, -0.016), "left"), "NA-MPNN": ((-2.2, 0.020), "right"),
     "gRNAde": ((2.2, 0.018), "left")}
 for m in METHOD_ORDER:
-    key = "TACo" if m == "TACo-Aptamer" else m
+    key = "PACo" if m == "PACo-Aptamer" else m
     g = gc["methods"][key]
     gx, gy = 100 * g["gc_mean"], g["mfe_nt_mean"]
     axe.scatter(gx, gy, s=22, c=METHOD_COLOR[m], zorder=4, ec="white", lw=0.4)

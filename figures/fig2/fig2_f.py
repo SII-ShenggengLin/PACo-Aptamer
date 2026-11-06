@@ -1,42 +1,41 @@
 # -*- coding: utf-8 -*-
-"""Fig 2f | 逐靶 Δ 双向条形:TACo − RhoDesign,477 链按 Δ 排序。
+"""Fig 2f | 链内 Spearman ρ 分布直方图:正值石板蓝 / 负值灰玫红。
 
-正向雾蓝/负向灰;中位数虚线;橙色方块(底部)标配体界面链。
+取代旧版单一大提琴+抖动(作者反馈太丑):0 为分箱边界,正负分色,
+零线虚线、黑色均值线;84% 为正由色块面积直接呈现,数字在图注。
 单独运行:python fig2_f.py → out/fig2_f.{pdf,png}(与拼合版物理尺寸一致)
 """
 import numpy as np
+from matplotlib.patches import Patch
 
 import fig2_common as C
-from fig_style import TACO, load, panel_label, save
+from fig_style import NEG, PACO, panel_label, save
+
+BINS = np.arange(-0.85, 0.951, 0.05)
 
 
 def draw(fig, gs):
-    axf = fig.add_subplot(gs[2, 0:5])
-    panel_label(axf, "f", x=-0.075, y=1.12)
-    delta = np.array([C.pc["TACo-Aptamer"][s] - C.pc["RhoDesign"][s]
-                      for s in C.STEMS]) * 100
-    order = np.argsort(delta)
-    cc = load("74_chain_ccd.json")
-    iface_flag = np.array([s in cc for s in C.STEMS])[order]
-    dv = delta[order]
-    axf.bar(np.arange(len(dv))[dv >= 0], dv[dv >= 0], width=1.0, color=TACO,
-            alpha=0.85, lw=0)
-    axf.bar(np.arange(len(dv))[dv < 0], dv[dv < 0], width=1.0, color="#A8A8A4",
-            alpha=0.9, lw=0)
-    axf.scatter(np.flatnonzero(iface_flag), np.full(int(iface_flag.sum()), -37.5),
-                marker="s", s=1.6, c="#E8A088", lw=0, clip_on=False)
-    axf.axhline(0, color="#545450", lw=0.6)
-    med = float(np.median(delta))
-    axf.axhline(med, color=TACO, lw=0.7, ls=":")
-    axf.text(len(dv) * 0.998, med + 1.8, f"median {med:+.1f} pp", ha="right",
-             fontsize=5.0, color=TACO)
-    axf.set_xlim(-5, len(dv) + 5); axf.set_ylim(-45, 64)
-    axf.set_xlabel(f"Chains ranked by per-chain Δ recovery (n = {len(dv)})")
-    axf.set_ylabel("Δ recovery vs\nRhoDesign (pp)")
-    axf.text(0.015, 0.035,
-             f"{100*np.mean(delta > 0):.0f}% of chains positive · orange squares = ligand-interface chains",
-             transform=axf.transAxes, fontsize=5.0, color="#545450",
-             bbox=dict(fc="white", ec="none", pad=1.0))
+    axf = fig.add_subplot(gs[1, 2])
+    panel_label(axf, "f")
+    counts, edges = np.histogram(C.within, bins=BINS)
+    share = 100 * counts / len(C.within)
+    centers = (edges[:-1] + edges[1:]) / 2
+    pos = centers > 0
+    axf.bar(centers[pos], share[pos], width=0.045, color=PACO,
+            ec="white", lw=0.3)
+    axf.bar(centers[~pos], share[~pos], width=0.045, color=NEG,
+            ec="white", lw=0.3)
+    axf.axvline(0, color="#7A7672", lw=0.6, ls=":")
+    axf.axvline(float(np.mean(C.within)), color="black", lw=0.9)
+    axf.set_xlim(-0.85, 0.9)
+    axf.set_ylim(0, 13.5)
+    axf.set_xticks([-0.6, -0.3, 0, 0.3, 0.6])
+    axf.legend(handles=[Patch(fc=PACO, ec="none", label="ρ > 0"),
+                        Patch(fc=NEG, ec="none", label="ρ < 0")],
+               loc="upper left", fontsize=4.8, handlelength=1.2,
+               handletextpad=0.4, borderaxespad=0.2, labelspacing=0.3)
+    axf.set_xlabel("Within-chain Spearman ρ")
+    axf.set_ylabel("Chains (%)")
     return axf
 
 

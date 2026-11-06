@@ -1,0 +1,15 @@
+# PACo-Aptamer paper figure environment (created 2026-10-13).
+# Renders all figures/* panels and composites (matplotlib) and the
+# structure images for Fig. 6 (open-source PyMOL, no evaluation watermark):
+#   figures $ pymol -cq fig6/fig6_gallery_pymol.py   (needs data/rcsb_pdb + data/survey/86_sctm)
+#          $ pymol -cq fig6/fig6_pymol.py
+#          $ python fig1.py ... fig6.py
+name: rna_if
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - matplotlib
+  - pymol-open-source

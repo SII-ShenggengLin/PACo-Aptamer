@@ -3,7 +3,7 @@
 
 a 三重隔离协议总览(结构簇 8:1:1 + 时间切分 + 配体级隔离层级图解)
 b,c zs 93 / indep 235 结果(柱状 + head-to-head vs RhoDesign)
-d 逐链 Δ(TACo − RhoDesign)分布(zs / indep 双小提琴)
+d 逐链 Δ(PACo − RhoDesign)分布(zs / indep 双小提琴)
 数据:survey/alayer_v2_retrained.json(per_chain + views)、
 81_wilcoxon.json、data/splits_v2/splits_v2.json
 """
@@ -16,7 +16,7 @@ from scipy import stats
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fig_style import (  # noqa: E402
-    MM, METHOD_COLOR, METHOD_ORDER, ROOT, SUR, TACO, apply_style, load,
+    MM, METHOD_COLOR, METHOD_ORDER, ROOT, SUR, PACO, apply_style, load,
     panel_label, save)
 
 apply_style()
@@ -39,7 +39,7 @@ pc = al["per_chain"]
 wil = load("81_wilcoxon.json")
 sp = json.load(open(os.path.join(ROOT, "data", "splits_v2", "splits_v2.json")))
 views = al["views"]
-MKEY = {m: ("TACoAptamer" if m == "TACo-Aptamer" else m) for m in METHOD_ORDER}
+MKEY = {m: ("PACoAptamer" if m == "PACo-Aptamer" else m) for m in METHOD_ORDER}
 
 fig = plt.figure(figsize=(183 * MM, 122 * MM))
 gs = gridspec.GridSpec(2, 10, figure=fig, hspace=0.52, wspace=1.9)
@@ -120,18 +120,18 @@ def draw_view(view, wilkey, row, letter_bar, letter_h2h, letter_vio, title):
     panel_label(axh, letter_h2h, x=-0.21, y=1.14)
     stems = sorted(sp[view])
     x = np.array([pc[s]["RhoDesign"]["recovery_best"] for s in stems]) * 100
-    y = np.array([pc[s]["TACoAptamer"]["recovery_best"] for s in stems]) * 100
+    y = np.array([pc[s]["PACoAptamer"]["recovery_best"] for s in stems]) * 100
     lim = (20, 100)
     axh.fill_between([0, 100], [0, 100], [100, 100], color="#EDF2F7", zorder=0)
     axh.plot(lim, lim, color="#8C8C88", lw=0.6, ls="--", zorder=1)
-    axh.scatter(x[y <= x], y[y <= x], s=4, c=TACO, alpha=0.6, lw=0, zorder=2)
+    axh.scatter(x[y <= x], y[y <= x], s=4, c=PACO, alpha=0.6, lw=0, zorder=2)
     axh.scatter(x[y > x], y[y > x], s=4, c="#B8B8B4", alpha=0.6, lw=0, zorder=2)
     win = float(np.mean(y > x))
-    axh.text(0.06, 0.94, f"TACo-Aptamer wins {100*win:.0f}%\nof chains",
+    axh.text(0.06, 0.94, f"PACo-Aptamer wins {100*win:.0f}%\nof chains",
              transform=axh.transAxes, va="top", fontsize=5.2)
     axh.set_xlim(lim); axh.set_ylim(lim); axh.set_aspect("equal")
     axh.set_xlabel("RhoDesign recovery (%)")
-    axh.set_ylabel("TACo-Aptamer recovery (%)")
+    axh.set_ylabel("PACo-Aptamer recovery (%)")
 
     # Δ 小提琴
     axv = fig.add_subplot(gs[row, 8:10])
@@ -139,8 +139,8 @@ def draw_view(view, wilkey, row, letter_bar, letter_h2h, letter_vio, title):
     dv = (y - x)
     vp = axv.violinplot([dv], widths=0.75, showextrema=False)
     for b in vp["bodies"]:
-        b.set_facecolor("#DCE6EF"); b.set_edgecolor(TACO); b.set_alpha(0.9)
-    axv.scatter(rng.normal(0, 0.05, len(dv)), dv, s=2.5, c=TACO, alpha=0.45,
+        b.set_facecolor("#DCE6EF"); b.set_edgecolor(PACO); b.set_alpha(0.9)
+    axv.scatter(rng.normal(0, 0.05, len(dv)), dv, s=2.5, c=PACO, alpha=0.45,
                 lw=0)
     axv.axhline(0, color="#545450", lw=0.6)
     axv.axhline(np.mean(dv), color="black", lw=0.9)

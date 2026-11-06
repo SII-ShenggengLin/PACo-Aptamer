@@ -1,4 +1,4 @@
-# TACo-Aptamer 论文写作与实验设计蓝图（Nature Methods 投稿）
+# PACo-Aptamer 论文写作与实验设计蓝图（Nature Methods 投稿）
 
 > 产出：2026-08-18。基于 9 篇目标文献精读（详见 `11_九篇文献精读报告集.md`）+ 项目现状（`08_立项`、`10_基准报告`、`01_文献调研`）。
 > 用途：指导论文叙事、六张大图规划、实验补做清单、绘图规范。作为实验设计与写作阶段的总纲。
@@ -20,7 +20,7 @@
 
 **Introduction 通用漏斗（4-6 段）**：① 适配体生物学/应用重要性（诊疗、检测、合成生物学）→ ② 设计方法谱系（SELEX 费时费力 → 逆折叠/生成式兴起：gRNAde/RhoDesign/AlignIF/NA-MPNN）→ ③ 核心缺口（**靶标从未进入模型**：RhoDesign 活性适配体全靠 G-四链体混杂基序、AlignIF 湿实验证明"结构保真≠结合亲和"（Kd 反而变差）、gRNAde 结论原文明说未来方向是 "accounting for partner molecules with RNAs"——**此句建议直接引用**）→ ④ 技术机会（蛋白侧 LigandMPNN 证明原子上下文条件化可行；RNAbpFlow 证明碱基对条件化是 RNA 最稳信息锚点 +41.7% TM）→ ⑤ 本文方案与贡献（方法 + 严格 zero-shot 协议 + 数据集三贡献）。
 
-**Abstract 骨架（6 句，LigandMPNN 式数字前置）**：背景难点 1 句 → 缺口 1 句（"现有方法只条件于结构，无法条件于靶标"）→ "Here we present TACo-Aptamer…" 1 句 → 核心机制 1 句（三图框架 + 双条件化[配体+SS] + 两阶段训练）→ **结果数字 2 句（ens2-noiface 主配置：B 层 74.90% vs 69.36% / zs 76.06% vs 71.8%，六口径全面领先 +2.3~+5.5pp）** → 意义 1 句（严格 zero-shot 配体级协议 + 从折叠到结合）。
+**Abstract 骨架（6 句，LigandMPNN 式数字前置）**：背景难点 1 句 → 缺口 1 句（"现有方法只条件于结构，无法条件于靶标"）→ "Here we present PACo-Aptamer…" 1 句 → 核心机制 1 句（三图框架 + 双条件化[配体+SS] + 两阶段训练）→ **结果数字 2 句（ens2-noiface 主配置：B 层 74.90% vs 69.36% / zs 76.06% vs 71.8%，六口径全面领先 +2.3~+5.5pp）** → 意义 1 句（严格 zero-shot 配体级协议 + 从折叠到结合）。
 
 **Results 小节标题（动名词/声明式，每节回应一个 claim）**——见第四节六图规划。
 
@@ -130,7 +130,7 @@
 
 > panel 级草案，标注数据状态。排版参照：AlignIF（2-4 列网格）、RNAbpFlow（图内嵌表）、trRosettaRNA2（小提琴+抖动点+均值线）。
 
-### Fig 1 | TACo-Aptamer 架构与数据（overview）
+### Fig 1 | PACo-Aptamer 架构与数据（overview）
 - **a** 范式示意（问题图）：左侧"现有方法：结构→序列，靶标不在模型内"；右侧"我们：靶标原子上下文+SS+界面 → 序列"（LigandMPNN 式三图画法：RNA 图/配体图/交叉图+配对边）✅
 - **b** 数据漏斗（AlignIF Fig1a 式）：24,252 PDB → 纯 RNA 6,988 + 复合物 868 → CD-HIT 0.8 + TM0.45 传递闭包 300 簇 → train 5,773 / val 96 / test 477 / indep 235 / zs 93（配体级隔离高亮）✅
 - **c** 模型架构详图：编码器-解码器数据流 + 损失分支（SS/界面加权/配体上下文）+ 随机序自回归解码 ✅
@@ -140,7 +140,7 @@
 ### Fig 2 | 严格防泄漏基准下的全面领先（主结果图）
 - **a** 评估协议流程图（gRNAde 图3 式：输入→采样池 3 温度×100→双口径恢复率/界面/perplexity 定义）✅
 - **b** 六方法主表（表格 panel 化，最优加粗，RNAbpFlow Fig2a 式）✅
-- **c** 恢复率柱状：best 与 t=0.1 双口径并排（基线灰、TACo 主色）+ 配对 Wilcoxon P 值 ✅（2026-08-18 81 号：TACo vs 四基线 × 三评估集 × 双口径 24 组全显著，vs RhoDesign B +6.07pp p=1.1e-46 / indep +3.76pp / zs +5.73pp；`survey/81_wilcoxon.json`）
+- **c** 恢复率柱状：best 与 t=0.1 双口径并排（基线灰、PACo 主色）+ 配对 Wilcoxon P 值 ✅（2026-08-18 81 号：PACo vs 四基线 × 三评估集 × 双口径 24 组全显著，vs RhoDesign B +6.07pp p=1.1e-46 / indep +3.76pp / zs +5.73pp；`survey/81_wilcoxon.json`）
 - **d,e** head-to-head 逐链散点 vs RhoDesign / vs 次优（trRosettaRNA2 式：对角线+胜率百分比图内直书）✅（数据在 63/69 号 per-chain）
 - **f** 逐靶 Δ 双向条形图（RNAbpFlow Fig3b 式：按配体家族/簇难度叠加属性方块）✅
 - **g** 界面恢复率 + 界面-整体差（口径注明小界面饱和）✅
@@ -157,19 +157,19 @@
 ### Fig 4 | 配体条件化的价值（"从折叠到结合"核心证据）
 > ⚠️ 2026-08-18 用户决策：原 a（错配配体负对照）与 h（条件跟随性）两 panel 因 P0-1 实验结果为阴性边界（推理期配体化学辨识≈0），**不进论文**（内部记录见 `14_P0-1配体置换负对照与条件跟随性结果.md`，管线 `data/75_p01_ligand_swap.py`）。Fig4 锚点改为 P0-0 双口径消融表。
 - **a** 消融双口径表：全局 best / 界面 best / Δ(界面-整体) 三列并排 + 配对 Wilcoxon p（no_ss 全局 -3.2pp / no_ligand 界面 -3.17pp p=0.006）✅（数据源 `survey/74_p00_iface_ablation.json`）
-- **b** 每核苷酸恢复率 vs 距配体距离/接触数（gRNAde 图5b 式边缘直方图；界面梯度是否存在）✅（2026-08-18 P0-2 完成：界面位 TACo 62.6% vs RhoDesign 55.4%，配对 Wilcoxon p=8.1e-4，胜率 59%；TACo 为唯一正归一化界面梯度方法（+1.9pp），NA-MPNN/AlignIF −9~−11pp；二壳层 5-12Å 普遍下凹；数据 `survey/77_p02_distance_gradient.json`）
-- **c** 条件保真度：输入 SS vs 生成序列回折 SS 的 INF 一致性（RNAbpFlow 式）✅（2026-08-18 P0-3 完成：TACo 0.282 > RhoDesign 0.248 ≪ gRNAde 0.627（t01 0.731）；native 1.0 / random 0.03 边界齐；相似度分箱揭示 gRNAde 补偿突变机制、TACo/RhoDesign 变异落点不保 MFE。**呈现框架=多裁判体系坐标轴展示**（恢复率轴 TACo 第一、SS 保真轴结构性改善），限制与 Discussion 出路见 `15_P0-2_3_4` §3.3；数据 `survey/77_p03_ss_fidelity.json`）
-- **d** 界面残基组成 logo：TACo 生成 vs 天然复合物 vs 基线（AlignIF 图4e 式）❌(纯分析)
-- **e** 结合代理打分分布（docking/RNALig 式打分器）：TACo vs 基线 vs 随机负对照 ❌ P1
-- **f** 自洽结构评估：scTM 箱线 + **native 上界列（v2 B 层 0.466，pass045=48%）** + 五方法 + recovery-matched 负对照 ✅（2026-08-18 86 号：TACo 0.283 > RhoDesign 0.240 > gRNAde 0.219；NA-MPNN 0.325 自洽第一——恢复率轴与自洽轴错位=多裁判论据；AF3 双预测器本地不可行如实记录；`survey/86_sctm.json`）
-- **g** recovery-matched 随机负对照（同 identity 突变体回折崩溃，AlignIF Random1/2 式）✅（2026-08-18 86 号 randmatch 条件：TACo −5.9pp vs 对照，CI 4.3-7.4，p=2e-11；randmatch 0.224≈gRNAde 水平=落地坍缩）
+- **b** 每核苷酸恢复率 vs 距配体距离/接触数（gRNAde 图5b 式边缘直方图；界面梯度是否存在）✅（2026-08-18 P0-2 完成：界面位 PACo 62.6% vs RhoDesign 55.4%，配对 Wilcoxon p=8.1e-4，胜率 59%；PACo 为唯一正归一化界面梯度方法（+1.9pp），NA-MPNN/AlignIF −9~−11pp；二壳层 5-12Å 普遍下凹；数据 `survey/77_p02_distance_gradient.json`）
+- **c** 条件保真度：输入 SS vs 生成序列回折 SS 的 INF 一致性（RNAbpFlow 式）✅（2026-08-18 P0-3 完成：PACo 0.282 > RhoDesign 0.248 ≪ gRNAde 0.627（t01 0.731）；native 1.0 / random 0.03 边界齐；相似度分箱揭示 gRNAde 补偿突变机制、PACo/RhoDesign 变异落点不保 MFE。**呈现框架=多裁判体系坐标轴展示**（恢复率轴 PACo 第一、SS 保真轴结构性改善），限制与 Discussion 出路见 `15_P0-2_3_4` §3.3；数据 `survey/77_p03_ss_fidelity.json`）
+- **d** 界面残基组成 logo：PACo 生成 vs 天然复合物 vs 基线（AlignIF 图4e 式）❌(纯分析)
+- **e** 结合代理打分分布（docking/RNALig 式打分器）：PACo vs 基线 vs 随机负对照 ❌ P1
+- **f** 自洽结构评估：scTM 箱线 + **native 上界列（v2 B 层 0.466，pass045=48%）** + 五方法 + recovery-matched 负对照 ✅（2026-08-18 86 号：PACo 0.283 > RhoDesign 0.240 > gRNAde 0.219；NA-MPNN 0.325 自洽第一——恢复率轴与自洽轴错位=多裁判论据；AF3 双预测器本地不可行如实记录；`survey/86_sctm.json`）
+- **g** recovery-matched 随机负对照（同 identity 突变体回折崩溃，AlignIF Random1/2 式）✅（2026-08-18 86 号 randmatch 条件：PACo −5.9pp vs 对照，CI 4.3-7.4，p=2e-11；randmatch 0.224≈gRNAde 水平=落地坍缩）
 
 ### Fig 5 | 生成质量：多样性、新颖性、进化保真
-- **a** 温度扫描 recovery–diversity 权衡（AlignIF 图4a 式温度渐变着色）✅（2026-08-18 82 号定量：t=0.1 下 TACo 多样性 0.239 vs RhoDesign 0.082、唯一占比 0.886 vs 0.298（模式坍缩），恢复率还高 5pp；`survey/82_temp_diversity.json`）
+- **a** 温度扫描 recovery–diversity 权衡（AlignIF 图4a 式温度渐变着色）✅（2026-08-18 82 号定量：t=0.1 下 PACo 多样性 0.239 vs RhoDesign 0.082、唯一占比 0.886 vs 0.298（模式坍缩），恢复率还高 5pp；`survey/82_temp_diversity.json`）
 - **b** 新颖性：与训练集/已知适配体最大序列相似性分布 + rank-ordered 曲线（RhoDesign 图2a/b 式；edlib NW）✅（2026-08-18 83 号：五方法 vs 训练库中位 0.43-0.48、>0.8 仅 1.9-3.3%；vs AptaDB 中位 ~0.5；`survey/83_novelty.json`）
 - **c** 生成池结构空间 t-SNE/UMAP + 已知家族定位（RhoDesign 图2e 式）✅（2026-08-18 85 号：60 链 × 5 方法 × 30 设计 4-mer t-SNE 坐标已存 `survey/85_tsne_points.json`）
-- **d** 家族保真 KL/|ΔH| vs Rfam/AptaDB 家族 profile（AlignIF 图4c/d 式）✅lite（2026-08-18 85 号：TM 簇 LOO profile，TACo KL 3.67 显著最优（基线 4.3-4.6，CI 不重叠）；随机参照 3.47 为熵锚须在 caption 说明；Rfam 版可选升级；`survey/85_family_kl.json`）
-- **e** 序列可行性：GC 含量/MFE 分布合理性（各方法对比）✅（2026-08-18 82 号：TACo GC 0.538/MFE −0.234/nt 最贴天然 0.520/−0.254；gRNAde 0.587/−0.425 偏高偏稳；`survey/82_gc_mfe.json`）
+- **d** 家族保真 KL/|ΔH| vs Rfam/AptaDB 家族 profile（AlignIF 图4c/d 式）✅lite（2026-08-18 85 号：TM 簇 LOO profile，PACo KL 3.67 显著最优（基线 4.3-4.6，CI 不重叠）；随机参照 3.47 为熵锚须在 caption 说明；Rfam 版可选升级；`survey/85_family_kl.json`）
+- **e** 序列可行性：GC 含量/MFE 分布合理性（各方法对比）✅（2026-08-18 82 号：PACo GC 0.538/MFE −0.234/nt 最贴天然 0.520/−0.254；gRNAde 0.587/−0.425 偏高偏稳；`survey/82_gc_mfe.json`）
 
 ### Fig 6 | 案例研究与回顾性验证
 - **a-c** 8HZD_A/B、8HZE_A 嘌呤核糖开关案例：结构叠合卡通（native 灰/designs 分方法着色）+ 界面口袋放大 + 逐位恢复 logo + 指标框 ✅
@@ -186,7 +186,7 @@
 **P0（决定论文上限与叙事版本，两周内）**
 0. **界面口径消融重析**（最优先、最便宜）：把 no_ligand / no_iface 消融评估从全局恢复率换到界面恢复率口径（含 ≥3 残基界面子集）。若界面 Δ ≫ 全局 Δ → 模块在正确位置起效，版本 B 的第一块基石（见蓝图 3.1 节算术论证）。需要为消融变体重建采样序列池（38 号口径）。
 1. ~~错配配体负对照 + 条件跟随性~~（✅ 2026-08-18 已执行完毕，`data/75_p01_ligand_swap.py`：12 家族 130 链 × 41 化学的口袋叠合置换 grid + teacher-forced 似然 + 集成采样）。结果为阴性边界：推理期化学辨识≈0（true vs swap 全口径 n.s.；U74/C74 特异位 P(native) 0.498 vs 0.499；单模残留 ±0.4pp 被集成洗掉）；真实效应是"训练期界面校准（P0-0）+ 推理期口袋占据（嘌呤 t01 +0.95pp p=4e-4）"。**2026-08-18 用户决策：两 panel 不进论文**；配体模块保留依据仍是 P0-0 训练期界面效应（p=0.006）。详见 `14_P0-1` 报告。
-2. ~~每核苷酸恢复率 vs 距配体距离曲线 / 条件保真度 INF / 置信度-恢复率相关~~（✅ 2026-08-18 全部完成，`data/77_p0234_analysis.py` 五相位 + `15_P0-2_3_4` 报告：Fig4b 界面位 +7.1pp p=8.1e-4 且唯一正归一化梯度；Fig4c TACo 0.282>RhoDesign 0.248 但 gRNAde 0.627 领先——按多裁判框架呈现；Fig2h 链间 ρ=0.526。**P0 四项至此收官**。）
+2. ~~每核苷酸恢复率 vs 距配体距离曲线 / 条件保真度 INF / 置信度-恢复率相关~~（✅ 2026-08-18 全部完成，`data/77_p0234_analysis.py` 五相位 + `15_P0-2_3_4` 报告：Fig4b 界面位 +7.1pp p=8.1e-4 且唯一正归一化梯度；Fig4c PACo 0.282>RhoDesign 0.248 但 gRNAde 0.627 领先——按多裁判框架呈现；Fig2h 链间 ρ=0.526。**P0 四项至此收官**。）
 
 **P1（补齐无湿实验防线，一个月内）**
 5. ~~AptaDB 回顾性 enrichment（Fig6d）~~（✅ 2026-08-18 完成但结果阴性，16 号报告；panel 改"回顾性审计"或移除，待用户定夺）。
@@ -208,7 +208,7 @@
 **关键发现：这些子刊本来就是低饱和粉彩（莫兰迪近亲）**——AlignIF 实测基线灰系+低饱和粉彩（有色像素仅占 0.26%）、RNAbpFlow Fig1 平均饱和度 0.31、trRosettaRNA2 蓝橙低饱和。我们统一莫兰迪与目标期刊风格天然一致，且比原文更系统化反而是差异化加分。
 
 **色板建议（主色恒定、语义恒定）**：
-- TACo 主色：雾霾蓝 **#4A7BA6**（比 AlignIF 的 (0,104,160) 略柔和）；ens2 变体可用深一档 #2E5F8A
+- PACo 主色：雾霾蓝 **#4A7BA6**（比 AlignIF 的 (0,104,160) 略柔和）；ens2 变体可用深一档 #2E5F8A
 - 基线方法：灰阶系列 #C4C4C0 / #A8A8A4 / #8C8C88 / #70706C / #545450（RhoDesign 用最深灰作"最强对手"）
 - 辅助莫兰迪（方法区分/分组）：青蓝 #90C8D8、珊瑚粉 #E88880、柔橙 #E8A088、长春花紫 #9888C8、灰绿 #A8C0A8、暖沙 #D8C8B0（均来自子刊实测色值的去饱和化）
 - 语义恒定约定：**配体/靶标恒用橙色系**（LigandMPNN 约定）；天然结构恒灰绿、设计结构恒蓝（预测蓝/实验绿 RNAbpFlow 约定的莫兰迪化：#6C9BD1 / #7FA88B）；负对照恒用砖红 #B07060

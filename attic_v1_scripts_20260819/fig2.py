@@ -17,7 +17,7 @@ from scipy import stats
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fig_style import (  # noqa: E402
-    MM, METHOD_COLOR, METHOD_ORDER, SUR, TACO, apply_style, load, panel_label,
+    MM, METHOD_COLOR, METHOD_ORDER, SUR, PACO, apply_style, load, panel_label,
     save)
 
 apply_style()
@@ -43,15 +43,15 @@ p04 = load("77_p04_confidence_recovery.json")
 p02 = load("77_p02_distance_gradient.json")["methods"]
 IFACE_KEY = "≤5Å(界面)"
 
-pc_taco = load("metrics_TACo_v2_ens2noiface_full.json")["per_chain"]
-pc = {"TACo-Aptamer": {k: v["recovery_best"] for k, v in pc_taco.items()}}
+pc_paco = load("metrics_PACo_v2_ens2noiface_full.json")["per_chain"]
+pc = {"PACo-Aptamer": {k: v["recovery_best"] for k, v in pc_paco.items()}}
 for m, f, key in [("RhoDesign", "metrics_RhoDesign_btest_v2.json", "recovery_best_overall"),
                   ("gRNAde", "metrics_gRNAde_btest_v2.json", "recovery_best_overall"),
                   ("NA-MPNN", "metrics_NAMPNN_btest_v2.json", "recovery_best"),
                   ("AlignIF", "metrics_AlignIF_btest_v2.json", "recovery_best")]:
     pc[m] = {k: v[key] for k, v in load(f)["per_chain"].items()}
-stems = sorted(pc_taco)
-chain_len = {s: pc_taco[s]["len"] for s in stems}
+stems = sorted(pc_paco)
+chain_len = {s: pc_paco[s]["len"] for s in stems}
 
 # ens2 池一次性读入(链级散点 + 链内相关共用,77 号同口径:
 # x=全池 300 条 mean logP,y=文件内 recovery_t01_mean,N 位计分母)
@@ -116,8 +116,8 @@ panel_label(axb, "b", x=-0.052, y=1.05)
 hdr = ["Method", "Pool-in-best (%)", "t = 0.1 mean (%)", "Coverage", "Pool size"]
 cell = []
 for m in METHOD_ORDER:
-    t = main["TACoAptamer" if m == "TACo-Aptamer" else m]
-    pool = {"TACo-Aptamer": "3T × 100 × 2", "RhoDesign": "3T × 100",
+    t = main["PACoAptamer" if m == "PACo-Aptamer" else m]
+    pool = {"PACo-Aptamer": "3T × 100 × 2", "RhoDesign": "3T × 100",
             "AlignIF": "T0.1 × 20", "NA-MPNN": "T0.1 × 10",
             "gRNAde": "3T × 100"}[m]
     cell.append([m, f"{100*t['recovery_best_mean']:.2f}",
@@ -131,7 +131,7 @@ for (i, j), c in tb.get_celld().items():
         c.set_facecolor("#EFEDEA"); c.set_text_props(fontweight="bold")
     else:
         m = cell[i - 1][0]
-        c.set_facecolor("#EDF2F7" if m == "TACo-Aptamer" else "white")
+        c.set_facecolor("#EDF2F7" if m == "PACo-Aptamer" else "white")
         if j in (1, 2):
             c.set_text_props(color=METHOD_COLOR[m])
             if float(cell[i - 1][j]) == (best_b if j == 1 else best_t):
@@ -143,7 +143,7 @@ axb.text(0.5, 0.015, "splits_v2 test, n = 477 chains · canonical native sequenc
 axc = fig.add_subplot(gs[1, 0:2])
 panel_label(axc, "c", x=-0.24, y=1.1)
 xs = np.arange(len(METHOD_ORDER)); w = 0.38
-_tk = lambda m: main["TACoAptamer" if m == "TACo-Aptamer" else m]
+_tk = lambda m: main["PACoAptamer" if m == "PACo-Aptamer" else m]
 vb = [100 * _tk(m)["recovery_best_mean"] for m in METHOD_ORDER]
 vt = [100 * _tk(m)["recovery_t01_mean"] for m in METHOD_ORDER]
 axc.bar(xs - w / 2, vb, w, color=[METHOD_COLOR[m] for m in METHOD_ORDER],
@@ -173,30 +173,30 @@ for ax, opp, letter in [
         (fig.add_subplot(gs[1, 5:8]), "AlignIF", "e")]:
     panel_label(ax, letter, x=-0.21, y=1.1)
     x = np.array([pc[opp][s] for s in stems]) * 100
-    y = np.array([pc["TACo-Aptamer"][s] for s in stems]) * 100
+    y = np.array([pc["PACo-Aptamer"][s] for s in stems]) * 100
     lim = (5, 100)
     ax.fill_between([0, 100], [0, 100], [100, 100], color="#EDF2F7", zorder=0)
     ax.plot(lim, lim, color="#8C8C88", lw=0.6, ls="--", zorder=1)
     win = float(np.mean(y > x))
-    ax.scatter(x[y <= x], y[y <= x], s=3.5, c=TACO, alpha=0.55, lw=0, zorder=2)
+    ax.scatter(x[y <= x], y[y <= x], s=3.5, c=PACO, alpha=0.55, lw=0, zorder=2)
     ax.scatter(x[y > x], y[y > x], s=3.5, c="#B8B8B4", alpha=0.55, lw=0, zorder=2)
     wj = wil["B_test_477"][opp]["recovery_best"]
-    ax.text(0.06, 0.94, (f"TACo-Aptamer wins {100*win:.0f}% of chains\n"
+    ax.text(0.06, 0.94, (f"PACo-Aptamer wins {100*win:.0f}% of chains\n"
             f"Δ = +{100*wj['delta']:.1f} pp, {pfmt_p(wj['p_two_sided'])}"),
             transform=ax.transAxes, va="top", fontsize=5.4)
     ax.set_xlim(lim); ax.set_ylim(lim); ax.set_aspect("equal")
     ax.set_xlabel(f"{opp} recovery (%)")
-    ax.set_ylabel("TACo-Aptamer recovery (%)")
+    ax.set_ylabel("PACo-Aptamer recovery (%)")
 
 # ============ f 逐靶 Δ 双向条形 ============
 axf = fig.add_subplot(gs[2, 0:5])
 panel_label(axf, "f", x=-0.075, y=1.12)
-delta = np.array([pc["TACo-Aptamer"][s] - pc["RhoDesign"][s] for s in stems]) * 100
+delta = np.array([pc["PACo-Aptamer"][s] - pc["RhoDesign"][s] for s in stems]) * 100
 order = np.argsort(delta)
 cc = load("74_chain_ccd.json")
 iface_flag = np.array([s in cc for s in stems])[order]
 dv = delta[order]
-axf.bar(np.arange(len(dv))[dv >= 0], dv[dv >= 0], width=1.0, color=TACO,
+axf.bar(np.arange(len(dv))[dv >= 0], dv[dv >= 0], width=1.0, color=PACO,
         alpha=0.85, lw=0)
 axf.bar(np.arange(len(dv))[dv < 0], dv[dv < 0], width=1.0, color="#A8A8A4",
         alpha=0.9, lw=0)
@@ -204,9 +204,9 @@ axf.scatter(np.flatnonzero(iface_flag), np.full(int(iface_flag.sum()), -37.5),
             marker="s", s=1.6, c="#E8A088", lw=0, clip_on=False)
 axf.axhline(0, color="#545450", lw=0.6)
 med = float(np.median(delta))
-axf.axhline(med, color=TACO, lw=0.7, ls=":")
+axf.axhline(med, color=PACO, lw=0.7, ls=":")
 axf.text(len(dv) * 0.998, med + 1.8, f"median {med:+.1f} pp", ha="right",
-         fontsize=5.0, color=TACO)
+         fontsize=5.0, color=PACO)
 axf.set_xlim(-5, len(dv) + 5); axf.set_ylim(-45, 64)
 axf.set_xlabel(f"Chains ranked by per-chain Δ recovery (n = {len(dv)})")
 axf.set_ylabel("Δ recovery vs\nRhoDesign (pp)")
@@ -218,8 +218,8 @@ axf.text(0.015, 0.035,
 # ============ g 界面恢复率 ============
 axg1 = fig.add_subplot(gs[2, 5:8])
 panel_label(axg1, "g", x=-0.135, y=1.12)
-mrows = ["TACo_ens2", "RhoDesign", "AlignIF", "NA-MPNN", "gRNAde"]
-mlab = ["TACo", "RhoDesign", "AlignIF", "NA-MPNN", "gRNAde"]
+mrows = ["PACo_ens2", "RhoDesign", "AlignIF", "NA-MPNN", "gRNAde"]
+mlab = ["PACo", "RhoDesign", "AlignIF", "NA-MPNN", "gRNAde"]
 iv = [100 * p02[m][IFACE_KEY]["mean"] for m in mrows]
 err = [100 * (p02[m][IFACE_KEY]["mean"] - p02[m][IFACE_KEY]["ci95"][0])
        for m in mrows]
@@ -248,7 +248,7 @@ axg1.text(0.985, 0.97, "solid: absolute (left axis)\nfaded: normalized (right ax
           color="#545450",
           bbox=dict(fc="white", ec="#C4C4C0", lw=0.4, pad=1.5))
 _ifaceW = load("19_iface_wilcoxon.json")
-axg1.annotate((f"TACo vs RhoDesign: Δ = +{100*(_ifaceW['taco_mean']-_ifaceW['rho_mean']):.1f} pp, "
+axg1.annotate((f"PACo vs RhoDesign: Δ = +{100*(_ifaceW['paco_mean']-_ifaceW['rho_mean']):.1f} pp, "
                f"P = {_ifaceW['p']:.2f} (n.s.)\n"
                "(paired Wilcoxon, 110 shared interface chains)"),
               xy=(0.5, 0.10), xycoords="axes fraction", fontsize=4.8,
@@ -270,8 +270,8 @@ axcb.ax.tick_params(labelsize=4.5); axcb.outline.set_linewidth(0.4)
 axh2 = fig.add_subplot(gs[3, 2:4])
 vp = axh2.violinplot([within], widths=0.75, showextrema=False)
 for b in vp["bodies"]:
-    b.set_facecolor("#DCE6EF"); b.set_edgecolor(TACO); b.set_alpha(0.9)
-axh2.scatter(rng.normal(0, 0.035, len(within)), within, s=2, c=TACO, alpha=0.35,
+    b.set_facecolor("#DCE6EF"); b.set_edgecolor(PACO); b.set_alpha(0.9)
+axh2.scatter(rng.normal(0, 0.035, len(within)), within, s=2, c=PACO, alpha=0.35,
              lw=0)
 axh2.axhline(float(np.mean(within)), color="black", lw=0.9)
 axh2.axhline(0, color="#B07060", lw=0.5, ls=":")
@@ -286,7 +286,7 @@ er10 = p04["logp_rank_enrichment"]["top10pct_minus_pool_mean"]
 er1 = p04["logp_rank_enrichment"]["top1_minus_pool_mean"]
 enr = [100 * er10["mean"], 100 * er1["mean"]]
 eci = [100 * (er10["mean"] - er10["ci95"][0]), 100 * (er1["mean"] - er1["ci95"][0])]
-axh3.bar([0, 1], enr, 0.55, yerr=eci, color=[TACO, "#2E5F8A"],
+axh3.bar([0, 1], enr, 0.55, yerr=eci, color=[PACO, "#2E5F8A"],
          error_kw=dict(lw=0.5, capsize=1.5), ec="white")
 for x, v in zip([0, 1], enr):
     axh3.text(x, v + 0.14, f"+{v:.2f}", ha="center", fontsize=5.4,

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Fig 1 | TACo-Aptamer 架构与数据(overview)。
+"""Fig 1 | PACo-Aptamer 架构与数据(overview)。
 
 a 范式示意(现有方法 vs 靶标条件化)
 b 数据漏斗(PDB → 纯 RNA/复合物 → 双重聚类 → 三重隔离划分)
@@ -15,7 +15,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fig_style import (  # noqa: E402
-    LIGAND, METHOD_COLOR, METHOD_ORDER, MM, TACO, TACO_D, apply_style, load,
+    LIGAND, METHOD_COLOR, METHOD_ORDER, MM, PACO, PACO_D, apply_style, load,
     panel_label, save)
 
 apply_style()
@@ -89,11 +89,11 @@ axa.text(4.35, 9.5, "target ligand not in model", fontsize=4.6,
          color="#B07060", ha="center", va="center")
 axa.plot([5.15, 5.5], [9.3, 9.7], color="#B07060", lw=1.1)
 axa.plot([5.15, 5.5], [9.7, 9.3], color="#B07060", lw=1.1)
-# 右半:TACo
-box(axa, 5.0, 5.6, 4.9, 3.3, "#F3F7FA", "", ec=TACO, lw=0.8)
-axa.text(7.45, 8.55, "TACo-Aptamer (this work)", ha="center", fontsize=5.6,
-         style="italic", color=TACO_D)
-rna_icon(axa, 5.95, 7.3, s=0.95, color=TACO_D)
+# 右半:PACo
+box(axa, 5.0, 5.6, 4.9, 3.3, "#F3F7FA", "", ec=PACO, lw=0.8)
+axa.text(7.45, 8.55, "PACo-Aptamer (this work)", ha="center", fontsize=5.6,
+         style="italic", color=PACO_D)
+rna_icon(axa, 5.95, 7.3, s=0.95, color=PACO_D)
 axa.text(5.7, 6.2, "backbone", ha="center", fontsize=4.7, color="#545450")
 lig_icon(axa, 6.6, 8.15, s=0.7)
 axa.text(7.5, 6.2, "ligand context", fontsize=4.7,
@@ -104,8 +104,8 @@ for dy in (0.0, 0.24):
     axa.plot(7.35 + tt, 6.35 + dy + 0.08 * np.cos(tt * 7),
              color="#7FA88B", lw=0.7)
 axa.text(6.5, 5.62, "SS pairs", ha="center", fontsize=4.7, color="#5A7A62")
-arrow(axa, 6.95, 7.25, 7.72, 7.25, color=TACO_D)
-box(axa, 7.8, 6.5, 1.6, 1.6, C_MODEL, "seq\ndesign", fs=4.7, ec=TACO)
+arrow(axa, 6.95, 7.25, 7.72, 7.25, color=PACO_D)
+box(axa, 7.8, 6.5, 1.6, 1.6, C_MODEL, "seq\ndesign", fs=4.7, ec=PACO)
 axa.text(8.75, 5.62, "sequence", ha="center", fontsize=4.7, color="#545450")
 axa.text(4.98, 7.3, "vs", ha="center", va="center", fontsize=5.5,
          color="#8C8C88")
@@ -188,7 +188,7 @@ box(axc, 9.9, 3.9, 4.6, 4.2, C_MODEL,
 arrow(axc, 14.5, 6.0, 15.5, 6.0)
 box(axc, 15.5, 3.9, 4.3, 4.2, C_MODEL,
     "Transformer\ndecoder ×3\n\nautoregressive\nA/C/G/U\n(temperature\nsampling)", fs=4.6)
-axc.text(17.65, 3.35, "sequence", ha="center", fontsize=4.8, color=TACO_D,
+axc.text(17.65, 3.35, "sequence", ha="center", fontsize=4.8, color=PACO_D,
          fontweight="bold")
 axc.text(10, 1.4, "cross-attention carries ligand context to every decoding step",
          fontsize=4.5, color="#B0755F", ha="center", style="italic")
@@ -205,18 +205,18 @@ box(axd, 0.2, 2.8, 4.1, 2.6, C_MODEL,
 arrow(axd, 4.3, 4.1, 5.3, 4.1)
 box(axd, 5.3, 2.8, 4.5, 2.6, "#DCE6EF",
     "ens2 ensemble\n2 S2 checkpoints\nstepwise softmax\nprobability averaging", fs=4.6,
-    ec=TACO, lw=0.8)
+    ec=PACO, lw=0.8)
 axd.text(2.45, 5.9, "60 epochs", fontsize=4.3, ha="left", color="#545450")
 axd.text(2.25, 2.4, "8 epochs", fontsize=4.3, ha="center", color="#545450")
 axd.text(5.0, 9.2, "two-stage training", fontsize=5.6, ha="center",
-         style="italic", color=TACO_D)
+         style="italic", color=PACO_D)
 axd.text(7.55, 2.3, "val-selected,\npool size unchanged", fontsize=4.3,
          ha="center", color="#545450")
 
 # ============ e 主结果预览 ============
 axe = fig.add_subplot(gs[1, 6:8])
 panel_label(axe, "e", x=-0.24, y=1.12)
-tk = lambda m: main["TACoAptamer" if m == "TACo-Aptamer" else m]
+tk = lambda m: main["PACoAptamer" if m == "PACo-Aptamer" else m]
 vb = [100 * tk(m)["recovery_best_mean"] for m in METHOD_ORDER]
 xe = np.arange(len(METHOD_ORDER))
 axe.bar(xe, vb, 0.62, color=[METHOD_COLOR[m] for m in METHOD_ORDER],

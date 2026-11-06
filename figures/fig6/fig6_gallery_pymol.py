@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Fig 6a 画廊 PyMOL 渲染（12 案 × 回折-天然叠加）。
 
-运行（无头、后台）:
-    /root/miniconda3/envs/egarps_env/bin/pymol -cq fig6_gallery_pymol.py
+运行（无头、后台,本项目 rna_if 环境的 open-source PyMOL,无水印）:
+    /root/miniconda3/envs/rna_if/bin/pymol -cq fig6_gallery_pymol.py
 
 每格内容（与 NACraft Fig3 同款四色语义，映射到本项目色板）:
   天然链   natv 灰绿 cartoon, 半透明 0.45（衬底）
-  TACo 回折 紫色 cartoon（主叙述层, RhoFold+ 预测, align 到天然链）
+  PACo 回折 紫色 cartoon（主叙述层, RhoFold+ 预测, align 到天然链）
   界面残基  ifblue 雾蓝段（<5 Å 配体的天然残基, 按序号映射染在回折链上）
   配体    ligor 橙色 sticks
 产出: out/fig6_gallery/{stem}.png (1200×800, 透明底, ray)
@@ -44,15 +44,25 @@ FAMILY_REF = {
 _ref_views = {}
 
 def define_colors():
-    """reinitialize 会清掉自定义颜色,须在每格循环内重定义。"""
-    cmd.set_color("natv",  [0x7F / 255, 0xA8 / 255, 0x8B / 255])   # 天然灰绿
-    cmd.set_color("ifblue", [0x6C / 255, 0x9B / 255, 0xD1 / 255])  # 界面雾蓝
-    cmd.set_color("desp",  [0x9B / 255, 0x7E / 255, 0xB8 / 255])   # 回折紫
-    cmd.set_color("ligor", [0xE8 / 255, 0xA0 / 255, 0x88 / 255])   # 配体橙
+    """reinitialize 会清掉自定义颜色与全局设置,须在每格循环内重定义。"""
+    cmd.set_color("natv",  [0xA3 / 255, 0xB1 / 255, 0x8A / 255])   # 天然灰绿
+    cmd.set_color("ifblue", [0x6B / 255, 0x7B / 255, 0x8D / 255])  # 界面石板蓝
+    cmd.set_color("desp",  [0xA9 / 255, 0x9A / 255, 0xAF / 255])   # 回折紫(灰紫)
+    cmd.set_color("ligor", [0xC0 / 255, 0x8B / 255, 0x7C / 255])   # 配体陶土橙
+    cmd.set("specular", 0)
+    cmd.set("depth_cue", 0)
+    cmd.set("ambient", 0.55)
+    cmd.set("direct", 0.40)
 
 cmd.set("ray_opaque_background", "off")
 cmd.set("ray_shadows", 0)
 cmd.set("antialias", 2)
+# 平光:关高光泛白与深度雾化褪色,提环境光(2026-10-23 颜色发灰修复:
+# 默认直射光把莫兰迪色洗淡,饱和度 14→28,天然链 0.45→0.30 更实)
+cmd.set("specular", 0)
+cmd.set("depth_cue", 0)
+cmd.set("ambient", 0.55)
+cmd.set("direct", 0.40)
 cmd.set("cartoon_sampling", 11)
 cmd.set("cartoon_smooth_cycles", 2)
 cmd.set("cartoon_tube_radius", 0.38)
@@ -137,7 +147,7 @@ for stem, lig_resn, excl in PICKS:
         print(f"[{stem}] family-align onto {ref_stem}: rms={rms[0]:.2f}Å "
               f"n={rms[1]}")
 
-    cmd.load(os.path.join(ROOT, "data", "survey", "86_sctm", f"TACo_{stem}.pdb"), "des")
+    cmd.load(os.path.join(ROOT, "data", "survey", "86_sctm", f"PACo_{stem}.pdb"), "des")
     # 仅保留距该链 5 Å 内的配体拷贝
     cmd.select("lig", f"byres ((cx and resn {lig_resn}) within 5.0 of nat)")
     cmd.select("desp", "des and not resn HOH")
@@ -170,7 +180,7 @@ for stem, lig_resn, excl in PICKS:
     cmd.hide("everything", "all")
     cmd.show("cartoon", "nat")
     cmd.color("natv", "nat")
-    cmd.set("cartoon_transparency", 0.45, "nat")
+    cmd.set("cartoon_transparency", 0.30, "nat")
     cmd.show("cartoon", "desp")
     cmd.color("desp", "desp")
     if iface_idx:
@@ -189,7 +199,7 @@ for stem, lig_resn, excl in PICKS:
         cmd.zoom("nat or lig", 4)
         if stem in FAMILY_REF.values():
             _ref_views[stem] = cmd.get_view()
-    cmd.png(os.path.join(OUT, f"{stem}.png"), width=1200, height=800,
+    cmd.png(os.path.join(OUT, f"{stem}.png"), width=2400, height=1600,
             ray=True, dpi=450)
     print(f"[{stem}] rendered")
 

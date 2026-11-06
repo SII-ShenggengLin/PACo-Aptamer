@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-"""SI Fig. | Conditioning-channel diagnostics(二级结构扰动 + 配体注意力)。
+"""SI Fig. | Conditioning-input diagnostics(二级结构扰动 + 配体注意力)。
 
-(a) 二级结构输入扰动(477 链,TACo):zero / shuffle / centroid 相对 standard
-    的 Δ recovery(best 与 t=0.1 两口径,pp),误差棒为 bootstrap 95% CI。
-    数据源 data/survey/97_ss_robust.json summary(逐值断言:
+(a) 二级结构输入扰动(477 链,PACo-Aptamer):zero / shuffle / centroid 相对
+    standard 的 Δ recovery(best 与 t=0.1 两口径,pp),误差棒为 bootstrap
+    95% CI。数据源 data/survey/97_ss_robust.json summary(逐值断言:
     zero −0.28/−0.46pp、shuffle −0.26/−0.59pp、centroid +0.17/+0.00pp)。
-(b) 配体 token 注意力质量(115 条界面链):界面 vs 非界面逐链差
-    (ens2),shuffled-ligand 与单模型(seed43)对照;阴性(Wilcoxon
-    P = 0.88 / 0.89 / ≈1.0)。数据源 data/survey/96_attention.json。
+(b) 配体 token 注意力(115 条界面链,decoder cross-attention 质量,
+    analysis/23 任务 B 口径):界面 − 非界面逐链差(发布集成),shuffled-
+    ligand 与标准变体单模型对照;阴性(Wilcoxon 单侧 P = 0.88 / 0.89 /
+    ≈1.0)。数据源 data/survey/96_attention.json。
 单独运行:python figures/si/si_ss_attention.py → figures/out/si/si_ss_attention.{pdf,png}
 """
 import numpy as np
@@ -20,13 +21,13 @@ EXPECT = {"zero": (-0.2753, -0.4559), "shuffle": (-0.2627, -0.5942),
 
 
 def draw_a(ax):
-    panel_label(ax, "a", x=-0.16, y=1.08)
+    panel_label(ax, "a")
     d = C.load("97_ss_robust.json")["summary"]
     assert d["standard"]["n"] == 477
     conds = ["zero", "shuffle", "centroid"]
     xg = np.arange(3); wg = 0.36
-    for j, (key, lab, col) in enumerate([("best", "best sample", C.TACO),
-                                         ("t01", "t = 0.1 mean", C.TACO_D)]):
+    for j, (key, lab, col) in enumerate([("best", "best sample", C.PACO),
+                                         ("t01", "t = 0.1 mean", C.PACO_D)]):
         vals, los, his = [], [], []
         for c in conds:
             dd = d[c][f"delta_{key}_vs_standard"]
@@ -41,30 +42,31 @@ def draw_a(ax):
         for xi, v, lo, hi in zip(xg + (j - 0.5) * wg, vals, los, his):
             ax.text(xi, v - lo - 0.06 if v < 0 else v + hi + 0.06,
                     f"{v:+.2f}", ha="center",
-                    va="top" if v < 0 else "bottom", fontsize=4.8)
-    ax.axhline(0, color="#545450", lw=0.6)
+                    va="top" if v < 0 else "bottom", fontsize=5.0)
+    ax.axhline(0, color="#7A7672", lw=0.6)
     ax.set_xticks(xg)
-    ax.set_xticklabels(["zeroed SS", "shuffled SS", "centroid SS"],
-                       fontsize=5.4)
-    ax.set_ylabel("Δ recovery vs standard (pp)")
+    ax.set_xticklabels(["zeroed", "shuffled", "centroid"], fontsize=5.6)
+    ax.set_xlabel("Secondary-structure input")
+    ax.set_ylabel("Δ recovery relative to standard (pp)")
     ax.set_ylim(-1.05, 0.75)
-    ax.legend(loc="lower left", fontsize=4.8, borderaxespad=0.1)
-    ax.text(0.98, 0.03, "n = 477 chains; error bars = bootstrap 95% CI",
-            transform=ax.transAxes, fontsize=4.4, ha="right", color="#777770")
+    ax.tick_params(axis="y", labelsize=5.6)
+    ax.legend(loc="lower right", fontsize=5.2, borderaxespad=0.2)
 
 
 def draw_b(ax):
-    panel_label(ax, "b", x=-0.16, y=1.08)
+    panel_label(ax, "b")
     d = C.load("96_attention.json")
     pc = d["per_chain"]; sm = d["summary"]
     assert sm["n_chains"] == 115
-    series = [("ens2\n(two-model)", "delta_iface_minus_noniface",
-               "ens2_delta_iface_minus_noniface", C.TACO),
-              ("shuffled\nligand ctrl", "delta_shuffle", "shuffle_delta",
-               C.AUX_SAND),
-              ("single model\n(seed43 ctrl)", "delta_seed43", "seed43_delta",
-               C.TACO_D)]
+    series = [("published\nensemble", "delta_iface_minus_noniface",
+               "ens2_delta_iface_minus_noniface", C.PACO),
+              ("shuffled ligand\n(control)", "delta_shuffle", "shuffle_delta",
+               C.NEG),
+              ("standard variant\n(control)", "delta_seed43", "seed43_delta",
+               C.PACO_D)]
     rng = np.random.default_rng(3)
+    all_max = max(max(np.array([pc[k][s[1]] for k in pc]) * 100)
+                  for s in series)
     for i, (lab, key, skey, col) in enumerate(series):
         v = np.array([pc[k][key] for k in pc]) * 100
         s = sm[skey]
@@ -76,23 +78,22 @@ def draw_b(ax):
                    alpha=0.35, lw=0)
         ax.plot([i - 0.24, i + 0.24], [v.mean(), v.mean()], color="black",
                 lw=1.0, zorder=5)
-        ax.text(i, 1.32, f"mean {100 * s['mean']:+.3f}\n"
-                         f"{C.pfmt_sci(s['wilcoxon_p_greater'])}",
-                ha="center", va="bottom", fontsize=4.6, color="#2E5F8A")
-    ax.axhline(0, color="#545450", lw=0.6)
+        ax.text(i, v.max() + 0.06, f"mean {100 * s['mean']:+.3f}\n"
+                 f"{C.pfmt_sci(s['wilcoxon_p_greater'])}",
+                ha="center", va="bottom", fontsize=4.8)
+    ax.axhline(0, color="#7A7672", lw=0.6)
     ax.set_xticks(range(3))
     ax.set_xticklabels([s[0] for s in series], fontsize=5.2)
-    ax.set_ylabel("Ligand-token attention mass\ninterface − non-interface (pp)")
-    ax.set_ylim(-1.5, 2.6)
-    ax.text(0.02, 0.03, "n = 115 interface chains; P = one-sided Wilcoxon "
-            "(H1: interface > non-interface)", transform=ax.transAxes,
-            fontsize=4.4, color="#777770")
+    ax.set_ylabel("Attention on ligand tokens\n"
+                  "interface − non-interface (pp)")
+    ax.set_ylim(-1.8, all_max + 0.5)
+    ax.tick_params(axis="y", labelsize=5.6)
 
 
 def main():
     fig, gs = C.make_canvas(62, 1, 2, width_ratios=[1.0, 1.0],
-                            wspace=0.36, left=0.085, right=0.99,
-                            top=0.88, bottom=0.17)
+                            wspace=0.30, left=0.085, right=0.99,
+                            top=0.88, bottom=0.20)
     draw_a(fig.add_subplot(gs[0, 0]))
     draw_b(fig.add_subplot(gs[0, 1]))
     C.save_si(fig, "ss_attention")

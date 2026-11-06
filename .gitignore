@@ -16,8 +16,10 @@
 *.swo
 *~
 
-# ── Bulk data (~116G raw PDB/CIF and derived sets — kept on server only, see README) ──
+# ── Bulk data (raw PDB/CIF and derived sets — Zenodo release, see README) ──
 data/*
+!data/*.py
+!data/*.sh
 !data/splits_v2/
 
 # ── Model weights / checkpoints (~14G — managed outside git) ──
@@ -29,7 +31,7 @@ models/
 
 # ── Third-party tool repos cloned with their own git remotes (see README for URLs) ──
 tools/*
-!tools/TACoAptamer/
+!tools/PACoAptamer/
 !tools/USalign/
 
 # ── Scratch space ──

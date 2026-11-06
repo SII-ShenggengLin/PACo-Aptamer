@@ -1,57 +1,66 @@
 # -*- coding: utf-8 -*-
-"""Fig 2g | 界面恢复率:绝对(左轴,实色)+ 归一化 Δ(右轴,半透明)双口径。
+"""Fig 2g | logP 排序筛选收益曲线:保留前 f% 设计的平均恢复率 − 池均值。
 
-≤5 Å 界面残基;95% CI 误差棒;TACo vs RhoDesign 界面 Wilcoxon(110 共享链)。
+77 号同口径逐链计算(k = max(1, int(N·f)),f=10% 与发表值精确一致),
+链级 bootstrap 95% CI(seed 0, n=2000);log 横轴,点线 + CI 带,
+100% 处自然归零(全池 = 池均值)。取代双柱条形/森林式孤点两版
+(作者反馈太空)。
 单独运行:python fig2_g.py → out/fig2_g.{pdf,png}(与拼合版物理尺寸一致)
 """
 import numpy as np
 
 import fig2_common as C
-from fig_style import METHOD_COLOR, load, panel_label, save
+from fig_style import PACO, panel_label, save
 
-IFACE_KEY = "≤5Å(界面)"
+FRACS = [0.01, 0.02, 0.05, 0.10, 0.20, 0.30, 0.50, 1.0]
+
+
+def _curve():
+    means, los, his = [], [], []
+    for f in FRACS:
+        per = []
+        for lp, rc in zip(C.pools_lp, C.pools_rc):
+            order = np.argsort(-lp)
+            k = max(1, int(len(lp) * f))
+            per.append(rc[order[:k]].mean() - rc.mean())
+        per = np.array(per)
+        if f == 1.0:
+            means.append(0.0); los.append(0.0); his.append(0.0)
+            continue
+        rng = np.random.RandomState(0)
+        bs = [rng.choice(per, len(per), replace=True).mean()
+              for _ in range(2000)]
+        means.append(100 * per.mean())
+        los.append(100 * np.percentile(bs, 2.5))
+        his.append(100 * np.percentile(bs, 97.5))
+    return np.array(means), np.array(los), np.array(his)
+
+
+MEANS, LOS, HIS = _curve()
 
 
 def draw(fig, gs):
-    axg1 = fig.add_subplot(gs[2, 5:8])
-    panel_label(axg1, "g", x=-0.135, y=1.12)
-    p02 = load("77_p02_distance_gradient.json")["methods"]
-    mrows = ["TACo_ens2", "RhoDesign", "AlignIF", "NA-MPNN", "gRNAde"]
-    mlab = ["TACo", "RhoDesign", "AlignIF", "NA-MPNN", "gRNAde"]
-    iv = [100 * p02[m][IFACE_KEY]["mean"] for m in mrows]
-    err = [100 * (p02[m][IFACE_KEY]["mean"] - p02[m][IFACE_KEY]["ci95"][0])
-           for m in mrows]
-    nm = [100 * p02[m][IFACE_KEY]["norm_mean"] for m in mrows]
-    nme = [100 * (p02[m][IFACE_KEY]["norm_mean"] - p02[m][IFACE_KEY]["norm_ci95"][0])
-           for m in mrows]
-    xg = np.arange(5); wg = 0.38
-    cols = [METHOD_COLOR[m] for m in mlab]
-    axg1.bar(xg - wg / 2, iv, wg, yerr=err, error_kw=dict(lw=0.5, capsize=1.2),
-             color=cols, ec="white", lw=0.3)
-    for x, v in zip(xg - wg / 2, iv):
-        axg1.text(x, v + 4.5, f"{v:.1f}", ha="center", fontsize=4.7,
-                  fontweight="bold" if v == max(iv) else "normal")
-    axg1.set_xticks(xg); axg1.set_xticklabels(mlab, rotation=30, ha="right")
-    axg1.set_ylabel("Interface recovery (%)"); axg1.set_ylim(0, 95)
-    axg2 = axg1.twinx()
-    axg2.bar(xg + wg / 2, nm, wg, yerr=nme, error_kw=dict(lw=0.5, capsize=1.2),
-             color=cols, alpha=0.45, ec="white", lw=0.3)
-    axg2.axhline(0, color="#545450", lw=0.5)
-    axg2.set_ylabel("Δ (interface − chain mean, pp)", fontsize=5.6)
-    axg2.set_ylim(-26, 13)
-    axg2.spines["right"].set_visible(True); axg2.spines["right"].set_linewidth(0.5)
-    axg2.spines["top"].set_visible(False)
-    axg1.text(0.985, 0.97, "solid: absolute (left axis)\nfaded: normalized (right axis)",
-              transform=axg1.transAxes, fontsize=4.8, ha="right", va="top",
-              color="#545450",
-              bbox=dict(fc="white", ec="#C4C4C0", lw=0.4, pad=1.5))
-    _ifaceW = load("19_iface_wilcoxon.json")
-    axg1.annotate((f"TACo vs RhoDesign: Δ = +{100*(_ifaceW['taco_mean']-_ifaceW['rho_mean']):.1f} pp, "
-                   f"P = {_ifaceW['p']:.2f} (n.s.)\n"
-                   "(paired Wilcoxon, 110 shared interface chains)"),
-                  xy=(0.5, 0.10), xycoords="axes fraction", fontsize=4.8,
-                  ha="center", color="#2E5F8A")
-    return axg1, axg2
+    axg = fig.add_subplot(gs[2, 0])
+    panel_label(axg, "g")
+    xs = np.array(FRACS)
+    axg.axhline(0, color="#7A7672", lw=0.6, ls=":")
+    axg.fill_between(xs, LOS, HIS, color="#8FA6BB", alpha=0.18, lw=0,
+                     zorder=1)
+    axg.plot(xs, MEANS, "-o", color=PACO, lw=0.9, ms=2.6, zorder=3)
+    for f, ha, dx in ((0.01, "left", 2), (0.10, "center", 0)):
+        i = FRACS.index(f)
+        axg.annotate(f"+{MEANS[i]:.2f}", (xs[i], MEANS[i]),
+                     textcoords="offset points", xytext=(dx, 4),
+                     ha=ha, fontsize=5.0, fontweight="bold")
+    axg.set_xscale("log"); axg.minorticks_off()
+    axg.set_xticks([0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0])
+    axg.set_xticklabels(["1", "2", "5", "10", "20", "50", "100"])
+    axg.set_xlim(0.008, 1.35)
+    axg.set_ylim(-0.12, 2.35)
+    axg.set_yticks([0, 1, 2])
+    axg.set_xlabel("Designs kept by log-probability ranking (%)")
+    axg.set_ylabel("Recovery − pool mean (%)")
+    return axg
 
 
 if __name__ == "__main__":

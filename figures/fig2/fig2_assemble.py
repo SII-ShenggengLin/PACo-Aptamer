@@ -2,11 +2,11 @@
 """Fig 2 | 严格防泄漏基准下的全面领先(主结果图)—— 组合入口。
 
 各子图绘图代码在 fig2_a.py … fig2_i.py(可独立运行、与拼合版共用
-fig2_common.make_canvas 的同一画布几何,字号/配色天然一致):
-  a 评估协议流程  b 六方法主表  c 恢复率柱状(best/t01 双口径+Wilcoxon P)
-  d,e head-to-head 逐链散点(vs RhoDesign / vs AlignIF)  f 逐靶 Δ 双向条形
-  g 界面恢复率(绝对+归一化)  h 置信度-恢复率相关(链间/链内/富集)
-  i 长度分层箱线
+fig2_common.make_canvas 的同一画布几何,字号/配色天然一致),3×3 满格:
+上行(恢复率对比)   a 双口径柱状  b,c head-to-head 逐链散点
+中行  d 逐链优势累积分布(ECDF,四条基线)  e 链级 hexbin
+                  f 链内 ρ 直方图
+下行  g logP 排序筛选收益曲线  h 长度分层箱线  i 配体家族分层优势
 
 运行:python fig2_assemble.py → out/fig2_main_results.{pdf,png}
 """

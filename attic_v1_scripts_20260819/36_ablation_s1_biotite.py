@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""对照实验：TACoModel × RhoDesign 特征管线（biotite 7 原子，27 号同款）
+"""对照实验：PACoModel × RhoDesign 特征管线（biotite 7 原子，27 号同款）
 
 目的：隔离"我们的数据管线（processed.pt 9 原子）" vs "模型实现"——若 biotite 版学得好
 （VAL 显著 >0.5），则数据管线有问题；否则模型实现有 bug。
@@ -15,9 +15,9 @@ import torch.nn.functional as F
 from torch.optim import Adam
 
 sys.path.insert(0, "/inspire/hdd/global_user/linshenggeng-240107100015/RNA_tertiary_stru_IF/tools")
-from TACoAptamer.model import TACoModel
-from TACoAptamer.alphabet import Alphabet
-from TACoAptamer.data_utils import augment
+from PACoAptamer.model import PACoModel
+from PACoAptamer.alphabet import Alphabet
+from PACoAptamer.data_utils import augment
 
 DATA_DIR = "/inspire/hdd/global_user/linshenggeng-240107100015/RNA_tertiary_stru_IF/data"
 RHO_SRC = "/inspire/hdd/global_user/linshenggeng-240107100015/RNA_tertiary_stru_IF/tools/RhoDesign_official/src"
@@ -51,7 +51,7 @@ def load_biotite(stems):
         ss = p["sec_struct_list"][0]
         if len(ss) != len(seq):
             continue
-        from TACoAptamer.data_utils import ss_to_pairs
+        from PACoAptamer.data_utils import ss_to_pairs
         out[stem] = {
             "coords": coords.astype(np.float32),   # (L, 7, 3)
             "ss_pairs": ss_to_pairs(ss),
@@ -144,7 +144,7 @@ def main():
     print(f"train {len(train_stems)} / val {len(val_stems)}", flush=True)
 
     alphabet = Alphabet(["A", "G", "C", "U", "X"])
-    model = TACoModel(args_class(), alphabet).cuda(device)
+    model = PACoModel(args_class(), alphabet).cuda(device)
     optimizer = Adam(model.parameters(), lr=1e-4)
     for epoch in range(5):
         t0 = time.time()

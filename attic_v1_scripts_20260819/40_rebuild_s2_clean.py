@@ -6,7 +6,7 @@ import json, torch
 from difflib import SequenceMatcher
 import sys
 sys.path.insert(0, "/inspire/hdd/global_user/linshenggeng-240107100015/RNA_tertiary_stru_IF/tools")
-from TACoAptamer.data_utils import load_s1
+from PACoAptamer.data_utils import load_s1
 
 DATA_DIR = "/inspire/hdd/global_user/linshenggeng-240107100015/RNA_tertiary_stru_IF/data"
 
@@ -23,7 +23,7 @@ torch.save(s2_clean, f"{DATA_DIR}/s2_btrain/s2_samples_clean.pt")
 print(f"干净 S2 数据: {len(s2_clean)} 链（剔除 {len(s2) - len(s2_clean)}）")
 
 # test 侧污染边界：488 条 test 链中多少与【原 S2 训练】同源 ≥0.9
-test_data = load_s1(set(te_chains), cache=f"{DATA_DIR}/taco_test.pt")
+test_data = load_s1(set(te_chains), cache=f"{DATA_DIR}/paco_test.pt")
 def sim(a, b): return SequenceMatcher(None, a, b).ratio()
 
 n_contam = 0

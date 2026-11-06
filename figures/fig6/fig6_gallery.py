@@ -2,9 +2,11 @@
 """Fig 6a | 12 案画廊:回折-天然叠加结构网格(NACraft Fig3 式)。
 
 12 条 test 链 × 12 种配体身份(22–119 nt, 9 胜 2 负 1 平):
-  每格 = 天然链灰绿半透明 cartoon + TACo-Aptamer 最优设计回折(RhoFold+)紫色
+  每格 = 天然链灰绿半透明 cartoon + PACo-Aptamer 最优设计回折(RhoFold+)紫色
         cartoon 叠加 + 界面残基(<5 Å 配体)雾蓝段 + 配体橙色 sticks
-  格上注记 stem·配体名, 格下注记 rec(TACo/RhoDesign)·scTM(TACo/RhoDesign)
+  格上注记 stem·配体名, 格下注记 rec(PACo/RhoDesign)·scTM(PACo/RhoDesign)
+  图例在画廊下方水平居中(2026-10-23 自上方移下;每格指标口径 PACo/RhoDesign
+  由图题说明,不再在图内重复)
 图片由 fig6_gallery_pymol.py 预渲染(1200×800 透明底)。
 单独运行:python fig6_gallery.py → out/fig6_a.{pdf,png}
 """
@@ -15,7 +17,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 import fig6_common as C
-from fig_style import MM, ROOT, panel_label, save
+from fig_style import ROOT, panel_label, save
 
 GALLERY_DIR = os.path.join(ROOT, "figures", "out", "fig6_gallery")
 
@@ -36,61 +38,70 @@ CELLS = [
 ]
 
 LEGEND = [
-    ("natv",   "#7FA88B", "native chain"),
-    ("desp",   "#9B7EB8", "TACo-Aptamer refold"),
-    ("ifblue", "#6C9BD1", "interface residues (<5 \u00c5)"),
-    ("ligor",  "#E8A088", "ligand"),
+    ("natv",   "#A3B18A", "native chain"),
+    ("desp",   "#A99AAF", "PACo-Aptamer refold"),
+    ("ifblue", "#6B7B8D", "interface residues (<5 \u00c5)"),
+    ("ligor",  "#C08B7C", "ligand"),
 ]
+
+LEGEND_FS = 8.0          # 与全图 8.0 pt 图例字号一致(第五轮 +1 pt)
+_SWATCH, _GAP, _SEP = 0.022, 0.008, 0.030   # fig fraction
+
+
+def _draw_legend(fig):
+    """画廊下方水平居中的色块图例条(按实测文本宽度居中)。"""
+    y = 1 - (C.GAL_BOTTOM_IN + 0.18) / fig.get_figheight()
+    r = fig.canvas.get_renderer()
+    texts = [fig.text(0.5, y, lab, fontsize=LEGEND_FS, va="center",
+                      ha="left", color="black") for _, _, lab in LEGEND]
+    fig.canvas.draw()
+    widths = [(t.get_window_extent(r).width / fig.get_figwidth()
+               / fig.dpi) for t in texts]
+    for t in texts:
+        t.remove()
+    total = (sum(_SWATCH + _GAP + w for w in widths)
+             + _SEP * (len(LEGEND) - 1))
+    x = 0.5 * (1 - total)
+    for (_, col, label), w in zip(LEGEND, widths):
+        fig.patches.append(Rectangle((x, y - 0.0075), _SWATCH, 0.012,
+                                     transform=fig.transFigure, fc=col,
+                                     ec="none", zorder=5))
+        fig.text(x + _SWATCH + _GAP, y, label, fontsize=LEGEND_FS,
+                 va="center", ha="left", color="black")
+        x += _SWATCH + _GAP + w + _SEP
 
 
 def draw(fig):
     W, H = fig.get_figwidth(), fig.get_figheight()
-    left, right = 0.010, 0.990
-    colw_in = (right - left) * W / 4
-    img_w_in = colw_in * 0.965
-    img_h_in = img_w_in * 800 / 1200
-    row_pitch_in = img_h_in + 0.16
-    top_in = H - 0.10
+    img_w_in = C.GAL_IMG_W_IN
+    img_h_in = C.GAL_IMG_H_IN
+    row_pitch_in = C.GAL_PITCH_IN
+    y_top_in = H - C.GAL_TOP_IN
 
-    # 图例条
-    lgy = 1 - (0.02 + 0.10) / H
-    axl = fig.add_axes([0.02, lgy - 0.012, 0.96, 0.016])
-    axl.set_xlim(0, 1)
-    axl.set_ylim(0, 1)
-    axl.set_axis_off()
-    x = 0.008
-    for _, col, label in LEGEND:
-        axl.add_patch(Rectangle((x, 0.42), 0.018, 0.5, fc=col, ec="none",
-                                transform=axl.transAxes))
-        axl.text(x + 0.024, 0.62, label, fontsize=5.4, va="center",
-                 transform=axl.transAxes)
-        x += 0.024 + len(label) * 0.0060 + 0.022
-    axl.text(x, 0.62, "in-cell metrics: recovery and scTM as TACo-Aptamer/RhoDesign",
-             fontsize=5.0, va="center", style="italic", color="#6E6C68",
-             transform=axl.transAxes)
-
-    y_top_in = top_in - 0.13
     for i, (stem, lig, rt, rr, st, sr) in enumerate(CELLS):
         r, c = divmod(i, 4)
-        x0 = left + c * (right - left) / 4 + (colw_in - img_w_in) / 2 / W
+        x0 = C.IMG_X[c] / W
         y0_in = y_top_in - r * row_pitch_in - img_h_in
         ax = fig.add_axes([x0, y0_in / H, img_w_in / W, img_h_in / H])
         img_path = os.path.join(GALLERY_DIR, f"{stem}.png")
         img = matplotlib.image.imread(img_path)
         ax.imshow(img, interpolation="none")
         ax.set_axis_off()
-        ax.set_title(f"{stem} \u00b7 {lig}", fontsize=5.8, pad=2.6)
-        ax.text(0.5, -0.062,
-                f"rec {rt:.2f}/{rr:.2f} \u00b7 scTM {st:.2f}/{sr:.2f}",
-                ha="center", va="top", fontsize=5.2, color="#4A4844",
-                transform=ax.transAxes)
+        # 2026-10-23:格题/注记与结构图净空 3.5/5 pt;第五轮格题 8.5 pt、
+        # 注记 7.5 pt(注记 8 pt 时超出列宽 ~2 pt,降半点后净空 ~2 mm)
+        ax.set_title(f"{stem} \u00b7 {lig}", fontsize=8.5, pad=3.5)
+        ax.annotate(f"recovery {rt:.2f}/{rr:.2f} \u00b7 scTM {st:.2f}/{sr:.2f}",
+                    xy=(0.5, 0), xycoords="axes fraction",
+                    xytext=(0, -5), textcoords="offset points",
+                    ha="center", va="top", fontsize=7.5)
         if i == 0:
-            panel_label(ax, "a", x=-0.115, y=1.16, size=8)
+            panel_label(ax, "a", size=10)
+    _draw_legend(fig)
     return fig
 
 
 if __name__ == "__main__":
-    fig, _gs = C.make_canvas()
+    fig, _L = C.make_canvas()
     draw(fig)
     save(fig, "fig6_a")
     print("gallery cells:", len(CELLS))
