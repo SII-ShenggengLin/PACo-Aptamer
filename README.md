@@ -5,8 +5,8 @@ PACo-Aptamer is a ligand-conditioned RNA inverse-folding model. This repository 
 ## Installation
 
 ```bash
-git clone https://github.com/SII-ShenggengLin/RNA_tertiary_stru_IF.git
-cd RNA_tertiary_stru_IF
+git clone https://github.com/SII-ShenggengLin/PACo-Aptamer.git
+cd PACo-Aptamer
 conda env create -f environment.yml
 conda activate paco-aptamer
 ```
