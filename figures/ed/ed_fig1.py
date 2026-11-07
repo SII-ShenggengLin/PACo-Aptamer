@@ -1,16 +1,4 @@
-# -*- coding: utf-8 -*-
-"""ED Fig. 1 | Chemical novelty stratification(化学新颖性分层)。
-
-(a) 87 条 zero-shot 链:配体对 247 个训练配体的 max Tanimoto vs 逐链优势(%),
-    按相似度分箱着色(四箱取 12 色板浅→深);OLS 回归线 + Spearman ρ/P。
-(b) 分箱优势均值柱状:y 轴从 0 起,柱上标均值,n 并入横轴刻度第二行
-    (双侧 Wilcoxon P 移入图注,[0,0.2) n=4 不检验)。
-(c) 指纹稳健性:Morgan/MACCS/Topological 三指纹的 ρ(优势)分组柱状,
-    best 实色、t = 0.1 半透明(主图两口径约定),无星号、无 n.s.。
-轴标签与 SI 图 6("Maximum Tanimoto similarity")和主图 Fig. 3i
-("Advantage over RhoDesign")同款,Δ 记号不进图。
-单独运行:python figures/ed/ed_fig1.py → figures/out/ed_fig1.{pdf,png}
-"""
+"""ED Fig. 1 | Chemical novelty stratification(化学新颖性分层)。"""
 import numpy as np
 from scipy import stats
 
@@ -19,16 +7,14 @@ from fig_style import PACO, panel_label, save
 
 BIN_EDGES = [(0.0, 0.2), (0.2, 0.4), (0.4, 0.6), (0.6, 1.0001)]
 BIN_LAB = ["0–0.2", "0.2–0.4", "0.4–0.6", "0.6–1.0"]
-# 12 色板浅→深四档(沙浅→暖灰→浅蓝→石板蓝),相似度越高越深
-BIN_COLS = ["#D9C3A9", "#B7B0A2", "#8FA6BB", "#6B7B8D"]
 
+BIN_COLS = ["#D9C3A9", "#B7B0A2", "#8FA6BB", "#6B7B8D"]
 
 def _bin_idx(x):
     for i, (lo, hi) in enumerate(BIN_EDGES):
         if lo <= x < hi:
             return i
     return len(BIN_EDGES) - 1
-
 
 def draw_a(ax):
     panel_label(ax, "a")
@@ -55,7 +41,6 @@ def draw_a(ax):
     ax.legend(loc="upper right", fontsize=5.0, handletextpad=0.15,
               borderaxespad=0.2, labelspacing=0.25)
 
-
 def draw_b(ax):
     panel_label(ax, "b")
     bt = C.T93["bins_table"]
@@ -70,7 +55,6 @@ def draw_b(ax):
                        fontsize=5.2)
     ax.set_ylabel("Advantage over RhoDesign\nbest sample (%)")
     ax.set_ylim(0, 7.8)
-
 
 def draw_c(ax):
     panel_label(ax, "c")
@@ -97,7 +81,6 @@ def draw_c(ax):
     ax.legend(loc="upper left", fontsize=5.0, borderaxespad=0.1,
               handlelength=1.2, labelspacing=0.3)
 
-
 def main():
     fig, gs = C.make_canvas(66, 1, 3, width_ratios=[1.10, 0.98, 1.0],
                             wspace=0.46, left=0.065, right=0.982,
@@ -107,7 +90,6 @@ def main():
     draw_b(axb)
     draw_c(fig.add_subplot(gs[0, 2]))
     save(fig, "ed_fig1")
-
 
 if __name__ == "__main__":
     main()

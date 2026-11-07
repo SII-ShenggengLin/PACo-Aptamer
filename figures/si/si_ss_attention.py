@@ -1,16 +1,4 @@
-# -*- coding: utf-8 -*-
-"""SI Fig. | Conditioning-input diagnostics(二级结构扰动 + 配体注意力)。
-
-(a) 二级结构输入扰动(477 链,PACo-Aptamer):zero / shuffle / centroid 相对
-    standard 的 Δ recovery(best 与 t=0.1 两口径,pp),误差棒为 bootstrap
-    95% CI。数据源 data/survey/97_ss_robust.json summary(逐值断言:
-    zero −0.28/−0.46pp、shuffle −0.26/−0.59pp、centroid +0.17/+0.00pp)。
-(b) 配体 token 注意力(115 条界面链,decoder cross-attention 质量,
-    analysis/23 任务 B 口径):界面 − 非界面逐链差(发布集成),shuffled-
-    ligand 与标准变体单模型对照;阴性(Wilcoxon 单侧 P = 0.88 / 0.89 /
-    ≈1.0)。数据源 data/survey/96_attention.json。
-单独运行:python figures/si/si_ss_attention.py → figures/out/si/si_ss_attention.{pdf,png}
-"""
+"""SI Fig. | Conditioning-input diagnostics(二级结构扰动 + 配体注意力)。"""
 import numpy as np
 
 import si_common as C
@@ -19,10 +7,9 @@ from fig_style import panel_label
 EXPECT = {"zero": (-0.2753, -0.4559), "shuffle": (-0.2627, -0.5942),
           "centroid": (0.1668, 0.0024)}
 
-
 def draw_a(ax):
     panel_label(ax, "a")
-    d = C.load("97_ss_robust.json")["summary"]
+    d = C.load("secondary_structure_robustness.json")["summary"]
     assert d["standard"]["n"] == 477
     conds = ["zero", "shuffle", "centroid"]
     xg = np.arange(3); wg = 0.36
@@ -52,10 +39,9 @@ def draw_a(ax):
     ax.tick_params(axis="y", labelsize=5.6)
     ax.legend(loc="lower right", fontsize=5.2, borderaxespad=0.2)
 
-
 def draw_b(ax):
     panel_label(ax, "b")
-    d = C.load("96_attention.json")
+    d = C.load("ligand_attention.json")
     pc = d["per_chain"]; sm = d["summary"]
     assert sm["n_chains"] == 115
     series = [("published\nensemble", "delta_iface_minus_noniface",
@@ -89,7 +75,6 @@ def draw_b(ax):
     ax.set_ylim(-1.8, all_max + 0.5)
     ax.tick_params(axis="y", labelsize=5.6)
 
-
 def main():
     fig, gs = C.make_canvas(62, 1, 2, width_ratios=[1.0, 1.0],
                             wspace=0.30, left=0.085, right=0.99,
@@ -97,7 +82,6 @@ def main():
     draw_a(fig.add_subplot(gs[0, 0]))
     draw_b(fig.add_subplot(gs[0, 1]))
     C.save_si(fig, "ss_attention")
-
 
 if __name__ == "__main__":
     main()

@@ -1,19 +1,10 @@
-# -*- coding: utf-8 -*-
-"""Fig 2g | logP 排序筛选收益曲线:保留前 f% 设计的平均恢复率 − 池均值。
-
-77 号同口径逐链计算(k = max(1, int(N·f)),f=10% 与发表值精确一致),
-链级 bootstrap 95% CI(seed 0, n=2000);log 横轴,点线 + CI 带,
-100% 处自然归零(全池 = 池均值)。取代双柱条形/森林式孤点两版
-(作者反馈太空)。
-单独运行:python fig2_g.py → out/fig2_g.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 2g | logP 排序筛选收益曲线:保留前 f% 设计的平均恢复率 − 池均值。"""
 import numpy as np
 
 import fig2_common as C
 from fig_style import PACO, panel_label, save
 
 FRACS = [0.01, 0.02, 0.05, 0.10, 0.20, 0.30, 0.50, 1.0]
-
 
 def _curve():
     means, los, his = [], [], []
@@ -35,9 +26,7 @@ def _curve():
         his.append(100 * np.percentile(bs, 97.5))
     return np.array(means), np.array(los), np.array(his)
 
-
 MEANS, LOS, HIS = _curve()
-
 
 def draw(fig, gs):
     axg = fig.add_subplot(gs[2, 0])
@@ -61,7 +50,6 @@ def draw(fig, gs):
     axg.set_xlabel("Designs kept by log-probability ranking (%)")
     axg.set_ylabel("Recovery − pool mean (%)")
     return axg
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

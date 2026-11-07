@@ -1,21 +1,14 @@
-# -*- coding: utf-8 -*-
-"""Fig 5f | 序列可行性 GC–MFE 2D 图(五方法点 + native 五角星参照)。
-
-占满整列(较旧版加宽);方法名黑色、引线用方法色;标签位置按点群手工错位,
-避免文字与图形元素重叠。
-单独运行:python fig5_f.py → out/fig5_f.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 5f | 序列可行性 GC–MFE 2D 图(五方法点 + native 五角星参照)。"""
 import fig5_common as C
 from fig_style import METHOD_COLOR, METHOD_ORDER, NATIVE, panel_label, save
 
-LBL = {  # (文字锚点, ha, va) —— RhoDesign 点与 native 星几乎重合,分层避让
+LBL = {
     "PACo-Aptamer": ((58.2, -0.262), "left", "center"),
     "RhoDesign": ((50.6, -0.222), "right", "center"),
     "AlignIF": ((51.8, -0.352), "center", "center"),
     "NA-MPNN": ((47.6, -0.313), "right", "center"),
     "gRNAde": ((59.9, -0.446), "left", "center"),
 }
-
 
 def draw(fig, gs):
     axf = fig.add_subplot(gs[1, 2])
@@ -33,7 +26,7 @@ def draw(fig, gs):
                      arrowprops=dict(arrowstyle="-", lw=0.4,
                                      color=METHOD_COLOR[m], shrinkA=1,
                                      shrinkB=3))
-    # native 星先画、方法点后画:RhoDesign 点与 native 几乎重合,保证两者都可见
+
     axf.scatter(100 * nat["gc_mean"], nat["mfe_nt_mean"], marker="*", s=60,
                 c=NATIVE, zorder=4, ec="#7A7672", lw=0.6)
     axf.annotate("native", (100 * nat["gc_mean"], nat["mfe_nt_mean"]),
@@ -48,7 +41,6 @@ def draw(fig, gs):
     axf.set_xticks([45, 50, 55, 60, 65])
     axf.set_yticks([-0.5, -0.4, -0.3, -0.2])
     return axf
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

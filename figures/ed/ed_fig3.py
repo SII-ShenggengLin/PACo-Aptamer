@@ -1,26 +1,15 @@
-# -*- coding: utf-8 -*-
-"""ED Fig. 3 | Designing from predicted backbones(预测骨架基准,193 链)——逐链细节。
-
-单面板图(无 panel 字母):Δ(predbb − crystal) best 口径逐链分布小提琴
-+ 抖动点 + 黑色均值线;均值数字标在各小提琴上方(ED4b 同款),
-小提琴加宽(0.65)收窄间距; zs 交叉切片在主图 Fig. 3i。
-x 轴用与方法名一致的完整称谓(PACo-Aptamer 等),全宽单面板空间充足,
-水平居中摆放(主图窄面板才用 20° 旋转);Δ 记号不进图。
-单独运行:python figures/ed/ed_fig3.py → figures/out/ed_fig3.{pdf,png}
-"""
+"""ED Fig. 3 | Designing from predicted backbones(预测骨架基准,193 链)——逐链细节。"""
 import numpy as np
 
 import ed_common as C
 from fig_style import METHOD_COLOR, save
 
-STEMS = C.ZS105["full193"]["chains"]  # 193 链(五方法 predbb 链集一致)
-
+STEMS = C.ZS105["full193"]["chains"]
 
 def _delta_best(method):
     pre = C.predbb_recovery(method)
     cry = C.crystal_recovery(method)
     return np.array([100 * (pre[s][0] - cry[s]["recovery_best"]) for s in STEMS])
-
 
 def draw(ax, rng):
     ms = C.PRED_ORDER
@@ -46,14 +35,12 @@ def draw(ax, rng):
     ax.set_ylabel("Change in recovery, best sample\n(predicted − crystal, %)")
     ax.set_ylim(-75, 44)
 
-
 def main():
     fig, gs = C.make_canvas(68, 1, 1,
                             left=0.062, right=0.99, top=0.93, bottom=0.15)
     rng = np.random.default_rng(0)
     draw(fig.add_subplot(gs[0, 0]), rng)
     save(fig, "ed_fig3")
-
 
 if __name__ == "__main__":
     main()

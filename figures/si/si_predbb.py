@@ -1,32 +1,16 @@
-# -*- coding: utf-8 -*-
-"""SI Fig. | Predicted-backbone per-chain transfer(预测骨架逐链分析)。
-
-(a) 每方法 crystal vs predicted backbone 逐链 best sample 散点
-    (5 个 mini-panel,n = 193,y = x 参考线);标注 Δbest 与 Δt01(pp)。
-    crystal = 63_main_table_gfix per_chain;predicted = 94/101/103/100/102
-    号 predbb per_chain。Δ 断言:PACo −5.3 / RhoDesign −6.9 / gRNAde −1.6 /
-    AlignIF −15.7 / NA-MPNN −19.1 pp。
-(b) 32 条 zero-shot ∩ predbb 重叠链专题(105_predbb_zs.json):
-    PACo-Aptamer−RhoDesign 优势 Δbest +6.7pp(P = 4.8×10⁻⁶)保持 vs
-    Δt01 −0.07pp(P = 0.42)归零。
-(c) 骨架切换效应(predbb − crystal):t01 口径 PACo-Aptamer −11.0pp vs
-    RhoDesign −6.3pp(best 口径 −5.7 / −6.4pp)。
-b/c 各占底行一半,间距由底层 wspace 控制;RhoFold+ 来源写在图注。
-单独运行:python figures/si/si_predbb.py → figures/out/si/si_predbb.{pdf,png}
-"""
+"""SI Fig. | Predicted-backbone per-chain transfer(预测骨架逐链分析)。"""
 import numpy as np
 
 import si_common as C
 from fig_style import panel_label
 
-PRED_FILE = {"PACoAptamer": "94_predbb_paco.json",
-             "RhoDesign": "101_rhodesign_predbb.json",
-             "gRNAde": "103_grnade_predbb.json",
-             "AlignIF": "100_alignif_predbb.json",
-             "NA-MPNN": "102_nampnn_predbb.json"}
+PRED_FILE = {"PACoAptamer": "predicted_backbone_paco.json",
+             "RhoDesign": "predicted_backbone_rhodesign.json",
+             "gRNAde": "predicted_backbone_grnade.json",
+             "AlignIF": "predicted_backbone_alignif.json",
+             "NA-MPNN": "predicted_backbone_nampnn.json"}
 EXPECT_DBEST = {"PACoAptamer": -5.31, "RhoDesign": -6.92, "gRNAde": -1.57,
                 "AlignIF": -15.74, "NA-MPNN": -19.08}
-
 
 def draw_scatter(ax, m, cry, pred, letter=None):
     if letter:
@@ -52,9 +36,8 @@ def draw_scatter(ax, m, cry, pred, letter=None):
     ax.tick_params(labelsize=4.8)
     ax.set_aspect("equal")
 
-
 def draw_zs(ax1, ax2):
-    d = C.load("105_predbb_zs.json")
+    d = C.load("predicted_backbone_zero_shot.json")
     zs = d["zs_subset"]["delta_PACo_minus_RhoDesign"]
     assert zs["best"]["n"] == 32
     assert abs(zs["best"]["mean"] - 0.06706) < 5e-5
@@ -77,7 +60,7 @@ def draw_zs(ax1, ax2):
     ax1.set_ylabel("PACo-Aptamer − RhoDesign (pp)", fontsize=6.0)
     ax1.set_ylim(-4.5, 12.5)
     ax1.tick_params(labelsize=5.6)
-    # 右:骨架切换效应分解
+
     panel_label(ax2, "c")
     dec = d["zs_subset_crystal_decomp"]["predbb_minus_crystal"]
     xg = np.arange(2)
@@ -98,9 +81,8 @@ def draw_zs(ax1, ax2):
     ax2.tick_params(labelsize=5.6)
     ax2.legend(loc="lower left", fontsize=5.0)
 
-
 def main():
-    main63 = C.load("63_main_table_gfix.json")["per_chain"]
+    main63 = C.load("benchmark_cluster.json")["per_chain"]
     pred = {m: C.load(f)["per_chain"] for m, f in PRED_FILE.items()}
     fig, gs = C.make_canvas(112, 2, 1, height_ratios=[1.0, 0.86],
                             hspace=0.55, left=0.060, right=0.995,
@@ -115,7 +97,6 @@ def main():
                      letter="a" if i == 0 else None)
     draw_zs(fig.add_subplot(gs_bot[0, 0]), fig.add_subplot(gs_bot[0, 1]))
     C.save_si(fig, "predbb")
-
 
 if __name__ == "__main__":
     main()

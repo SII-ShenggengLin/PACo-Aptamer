@@ -1,23 +1,12 @@
-# -*- coding: utf-8 -*-
-"""ED Fig. 2 | Ligand-family leave-one-out and coverage(LOFO)。
-
-(a) 五个配体家族剔除重训的 zs best Δ(vs 全量基线 73.35%),按 |Δ| 降序;
-    full_ctl 同分布重训作噪声参照(暖灰),灰带 = ±0.04% 重训噪声;
-    柱下标 Δ 与 P,x 轴标家族剔除链数(面板内不再放角标说明,噪声带含义进图注)。
-(b) 家族覆盖曲线:仅保留前 k 个家族的训练链数 vs zs best;
-    参考线 = 全量训练 73.35%(虚线)+ 同宽噪声带;参考值与链数进图注。
-轴标签精简为单词短语(Δ 记号不进图),与主图 Fig. 2/3 轴标签风格一致。
-单独运行:python figures/ed/ed_fig2.py → figures/out/ed_fig2.{pdf,png}
-"""
+"""ED Fig. 2 | Ligand-family leave-one-out and coverage(LOFO)。"""
 import numpy as np
 
 import ed_common as C
 from fig_style import PACO, panel_label, save
 
-VAR_ORDER = ["aminoglycoside", "sam_sah", "2ba", "ntp", "cla"]  # |Δ| 降序
+VAR_ORDER = ["aminoglycoside", "sam_sah", "2ba", "ntp", "cla"]
 VAR_LAB = {"aminoglycoside": "aminoglycoside", "sam_sah": "SAM/SAH",
            "2ba": "2BA", "ntp": "NTP", "cla": "chlorophyll a"}
-
 
 def draw_a(ax):
     panel_label(ax, "a")
@@ -54,7 +43,6 @@ def draw_a(ax):
     ax.set_ylabel("Change in zero-shot recovery (%)")
     ax.set_ylim(-2.9, 1.15)
 
-
 def draw_b(ax):
     panel_label(ax, "b")
     cc = C.LOFO["coverage_curve"]
@@ -79,7 +67,6 @@ def draw_b(ax):
     ax.set_ylim(70.4, 74.6)
     ax.set_xlim(-0.4, 3.4)
 
-
 def main():
     fig, gs = C.make_canvas(66, 1, 2, width_ratios=[1.32, 1.0],
                             wspace=0.34, left=0.062, right=0.995,
@@ -87,7 +74,6 @@ def main():
     draw_a(fig.add_subplot(gs[0, 0]))
     draw_b(fig.add_subplot(gs[0, 1]))
     save(fig, "ed_fig2")
-
 
 if __name__ == "__main__":
     main()

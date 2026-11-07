@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Fig 4d | 每核苷酸恢复率 vs 距配体距离(相对各链自身均值,独立编号面板)。
-
-与 c 同数据同色序的归一化口径(Δ 记号按全图惯例改为文字化轴标题);
-零参照虚线入图例("chain mean");不重复方法图例(方法色同 c)。
-单独运行:python fig4_d.py → out/fig4_d.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 4d | 每核苷酸恢复率 vs 距配体距离(相对各链自身均值,独立编号面板)。"""
 import numpy as np
 from matplotlib.lines import Line2D
 
 import fig4_common as C
 from fig_style import METHOD_COLOR, panel_label, save
-
 
 def draw(fig, gs):
     ax = fig.add_subplot(gs[1, 0])
@@ -36,7 +29,6 @@ def draw(fig, gs):
     ax.set_xlabel("Distance to ligand (Å)")
     ax.set_ylabel("Recovery relative to chain mean (%)")
     return ax
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

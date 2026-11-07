@@ -1,19 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Fig 3d | independent test 235 链:五方法双口径均值点图(Cleveland dot plot)。
-
-与 a 同数据、同方法序、同 y 标尺(0–110,列对齐),图型从柱状改为点图,
-避免与 a/g 三连柱状重复;口径编码沿用全图惯例:实心点 = best sample
-per chain,半透明点 = t = 0.1 mean;面板内不标数字(数值由图注/正文承载)。
-曾试画链级 bootstrap 95% CI:93–235 条链下区间半宽仅 0.9–1.9 个百分点,
-被任何可读大小的圆点完全遮住,只余装饰,故不画(存档见 changelog v1.65)。
-单独运行:python fig3_d.py → out/fig3_d.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 3d | independent test 235 链:五方法双口径均值点图(Cleveland dot plot)。"""
 import numpy as np
 from matplotlib.lines import Line2D
 
 import fig3_common as C
 from fig_style import (METHOD_COLOR, METHOD_ORDER, panel_label, save)
-
 
 def draw(fig, gs):
     ax = fig.add_subplot(gs[1, 0:2])
@@ -43,7 +33,6 @@ def draw(fig, gs):
     ax.set_ylabel("Sequence recovery (%)")
     ax.set_ylim(0, 110)
     return ax
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

@@ -1,16 +1,4 @@
-# -*- coding: utf-8 -*-
-"""SI Fig. | Interface consensus composition(界面位置序列 logo + 115 链汇总)。
-
-(a,b) 两条代表链(8HB1_A、8D5L_A)的界面位置序列 logo:native /
-    PACo-Aptamer / RhoDesign / gRNAde / NA-MPNN / AlignIF 六行;字母按
-    该位 t=0.1 池(100 条)频率以真实行高绘制(基线堆叠,无重叠),行标签
-    画在坐标区内侧固定宽度的左槽中,与各行垂直居中对齐;位置按链内核
-    苷酸索引标注。
-    数据源 data/survey/92_interface_logos_gfix.json case_detail.per_method.per_pos。
-(c) 全部 115 条界面链(占满底行):consensus = native 的位置比例(micro)
-    与逐链 match fraction 宏均值,5 方法双联柱状(all115_summary)。
-单独运行:python figures/si/si_iface_logo.py → figures/out/si/si_iface_logo.{pdf,png}
-"""
+"""SI Fig. | Interface consensus composition(界面位置序列 logo + 115 链汇总)。"""
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
@@ -22,19 +10,15 @@ ROW_ORDER = ["native", "PACo", "RhoDesign", "gRNAde", "NA-MPNN", "AlignIF"]
 ROW_LAB = {"native": "native", "PACo": "PACo-Aptamer", "RhoDesign": "RhoDesign",
            "gRNAde": "gRNAde", "NA-MPNN": "NA-MPNN", "AlignIF": "AlignIF"}
 CASES = [("8HB1_A", "a"), ("8D5L_A", "b")]
-YLO, YHI_PAD = -0.50, 0.10   # 行区下方留给位置编号条的高度 / 行区上方留白
-
+YLO, YHI_PAD = -0.50, 0.10
 
 def draw_logo(ax, case, letter):
     panel_label(ax, letter)
-    d = C.load("92_interface_logos_gfix.json")["case_detail"][case]
+    d = C.load("interface_sequence_logos.json")["case_detail"][case]
     pos = sorted(map(int, d["per_method"]["PACo"]["per_pos"].keys()))
     npos, nrow = len(pos), len(ROW_ORDER)
     ylo, yhi = YLO, nrow + YHI_PAD
 
-    # 字号同时受行高与列宽约束(Arial Bold 实测墨迹:G/C 高 0.728 em,
-    # A 宽 0.718 em):大写墨迹高 ≤ f 个 y 单位,最宽字母 ≤ 0.94 列宽,
-    # 相邻列与堆叠内字母的墨迹互不重叠
     fb = ax.get_position()
     ax_h_in = fb.height * ax.figure.get_figheight()
     ax_w_mm = fb.width * ax.figure.get_figwidth() * 25.4
@@ -54,7 +38,7 @@ def draw_logo(ax, case, letter):
                 freqs = d["per_method"][m]["per_pos"][str(p)]["freq"]
             base = 0.0
             for nt, f in sorted(freqs.items(), key=lambda kv: kv[1]):
-                if f <= 0.05:      # <1.1 pt 字母不可读,且避免与下方字母墨迹相碰
+                if f <= 0.05:
                     continue
                 ax.text(xi + 0.5, y0 + base, nt, fontsize=f * fs_full,
                         fontweight="bold", color=NT_COL[nt],
@@ -71,10 +55,9 @@ def draw_logo(ax, case, letter):
     ax.set_title(f"{case} ({d['n_iface']} interface positions)",
                  fontsize=6.0)
 
-
 def draw_summary(ax):
     panel_label(ax, "c")
-    s = C.load("92_interface_logos_gfix.json")["all115_summary"]
+    s = C.load("interface_sequence_logos.json")["all115_summary"]
     order = ["PACo", "RhoDesign", "gRNAde", "NA-MPNN", "AlignIF"]
     xg = C.np.arange(len(order)); wg = 0.30
     v1 = [100 * s[m]["consensus_eq_native_micro"] for m in order]
@@ -98,7 +81,6 @@ def draw_summary(ax):
                              label="per-chain match fraction (macro)")],
               loc="upper right", fontsize=5.2)
 
-
 def main():
     C.apply_style()
     fig = plt.figure(figsize=(183 * C.MM, 96 * C.MM))
@@ -111,7 +93,6 @@ def main():
         draw_logo(fig.add_subplot(gs_top[0, i]), case, letter)
     draw_summary(fig.add_subplot(gs[1]))
     C.save_si(fig, "iface_logo")
-
 
 if __name__ == "__main__":
     main()

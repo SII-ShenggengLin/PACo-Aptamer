@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Fig 2h | 长度分层箱线:≤40 / 40–80 / >80 nt 三档 × 五方法恢复率。
-
-箱体方法色;黑点 = 方法均值(不做跨档连线)。y 轴上限扩至 119 腾出
-顶部空带,三列图例置于坐标区内部上方,不再悬于面板外。
-单独运行:python fig2_h.py → out/fig2_h.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 2h | 长度分层箱线:≤40 / 40–80 / >80 nt 三档 × 五方法恢复率。"""
 import numpy as np
 from matplotlib.lines import Line2D
 
 import fig2_common as C
 from fig_style import METHOD_COLOR, METHOD_ORDER, panel_label, save
-
 
 def draw(fig, gs):
     axh = fig.add_subplot(gs[2, 1])
@@ -45,7 +38,6 @@ def draw(fig, gs):
     axh.legend(handles=handles, ncol=3, loc="upper center", fontsize=4.8,
                handletextpad=0.25, columnspacing=0.7, labelspacing=0.25)
     return axh
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

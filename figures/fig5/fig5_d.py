@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Fig 5d | 生成池 4-mer 组成 t-SNE(60 链 × 5 方法 × 30 设计 + native ×)。
-
-去掉面板内说明文字(信息由图题承载);纵轴上限加长留出顶部空白带,
-两行三列图例置于坐标范围内的空白带里,不与点云重叠。
-单独运行:python fig5_d.py → out/fig5_d.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 5d | 生成池 4-mer 组成 t-SNE(60 链 × 5 方法 × 30 设计 + native ×)。"""
 import numpy as np
 from matplotlib.lines import Line2D
 
 import fig5_common as C
 from fig_style import METHOD_COLOR, METHOD_ORDER, NATIVE, panel_label, save
-
 
 def draw(fig, gs):
     axd = fig.add_subplot(gs[1, 0])
@@ -25,7 +18,7 @@ def draw(fig, gs):
     axd.set_xticks([]); axd.set_yticks([])
     axd.set_xlabel("t-SNE 1"); axd.set_ylabel("t-SNE 2")
     axd.set_xlim(-112, 113)
-    axd.set_ylim(-116, 124)  # 顶部空白带(点云上缘 86)放图例
+    axd.set_ylim(-116, 124)
     handles = [Line2D([], [], marker="o", ls="", color=METHOD_COLOR[m],
                       markersize=3, label=m) for m in METHOD_ORDER]
     handles.append(Line2D([], [], marker="x", ls="", color=NATIVE,
@@ -34,7 +27,6 @@ def draw(fig, gs):
                handlelength=0.9, handletextpad=0.25, columnspacing=0.8,
                labelspacing=0.2, borderaxespad=0.3)
     return axd
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

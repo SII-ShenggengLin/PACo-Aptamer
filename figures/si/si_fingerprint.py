@@ -1,18 +1,4 @@
-# -*- coding: utf-8 -*-
-"""SI Fig. | Fingerprint robustness(Tanimoto 稳健性三指纹)。
-
-三个 mini-panel(Morgan / MACCS keys / RDKit topological):
-87 条 zero-shot 链,逐链 Δ recovery t01(PACo-Aptamer − RhoDesign,%)vs
-配体对 247 个训练配体的最大 Tanimoto 相似度;OLS 虚线 + Spearman ρ/P。
-面板标题统一"名称 (参数, 位数)":MACCS = 166 结构键 + bit0 = 167 bit;
-RDKit topological = RDKFingerprint 默认参数(minPath=1, maxPath=7,
-fpSize=2048),位数见 data/106_tanimoto_robust.py。坐标轴只留单行短标签,
-"对 247 个训练配体"与 Δ 方向(PACo-Aptamer − RhoDesign)由 SI 图注说明。
-数据源 data/survey/106_tanimoto_robust.json;Morgan 列逐位断言等于
-data/survey/93_tanimoto_zs.json(max_abs_diff = 0)。
-校验:Δt01 ρ = −0.401 / −0.341 / −0.345(MACCS/topo P ≤ 1.2×10⁻³)。
-单独运行:python figures/si/si_fingerprint.py → figures/out/si/si_fingerprint.{pdf,png}
-"""
+"""SI Fig. | Fingerprint robustness(Tanimoto 稳健性三指纹)。"""
 import numpy as np
 from scipy import stats
 
@@ -25,13 +11,12 @@ FPS = [("morgan", "Morgan (radius 2, 2048 bit)"),
 EXPECT = {"morgan": (-0.4007, 1.203e-04), "maccs": (-0.3406, 1.246e-03),
           "rdkit_topo": (-0.3448, 1.074e-03)}
 
-
 def main():
-    d = C.load("106_tanimoto_robust.json")
-    t93 = C.load("93_tanimoto_zs.json")
+    d = C.load("ligand_fingerprint_robustness.json")
+    t93 = C.load("ligand_novelty.json")
     s93 = {s["stem"]: s["max_tanimoto"] for s in t93["scatter"]}
     pc = d["per_chain"]
-    # Morgan 与 93 逐位一致
+
     for stem, v in pc.items():
         assert abs(v["max_tanimoto_morgan"] - s93[stem]) < 1e-12, stem
     for fp, (er, ep) in EXPECT.items():
@@ -64,7 +49,6 @@ def main():
             ax.set_ylabel("Δ recovery, t = 0.1 mean (%)")
         ax.set_ylim(-14, 24)
     C.save_si(fig, "fingerprint")
-
 
 if __name__ == "__main__":
     main()

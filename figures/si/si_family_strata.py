@@ -1,14 +1,4 @@
-# -*- coding: utf-8 -*-
-"""SI Fig. | Ligand-family stratification(配体家族分层,t=0.1 口径)。
-
-5 方法 × (9 多链配体家族 + other) 分组柱状,家族下标 n;
-家族短名与正文 Fig 2i 一致(Purine/Theophylline/Xanthine/ZTP/dG/
-Mango-III/1MMS/3GCA/8HB1),显著性 P 值只在图注与 ED Table 3 中给出,
-图内不标星号。图例方法名与正文一致(PACo-Aptamer)。
-数据源 data/survey/104_ed_tables/ed_table3_family_strata.csv(gRNAde 已修正口径),
-逐值断言;家族 n 与 data/survey/91_family_strata_gfix.json 交叉核对。
-单独运行:python figures/si/si_family_strata.py → figures/out/si/si_family_strata.{pdf,png}
-"""
+"""SI Fig. | Ligand-family stratification(配体家族分层,t=0.1 口径)。"""
 import numpy as np
 
 import si_common as C
@@ -22,21 +12,20 @@ PRETTY = {"fam_1MMS": "1MMS", "theophylline_aptamer": "Theophylline",
 ORDER = ["purine_riboswitch", "theophylline_aptamer", "mango3_aptamer",
          "ztp_riboswitch", "xanthine_riboswitch", "fam_1MMS", "fam_3GCA",
          "dG_riboswitch", "fam_8HB1", "other"]
-# 图例名与正文一致(PACo-Aptamer);其余沿用 si_common 短标签
-LAB = dict(C.MLAB, PACoAptamer="PACo-Aptamer")
 
+LAB = dict(C.MLAB, PACoAptamer="PACo-Aptamer")
 
 def main():
     rows = {r["family"]: r for r in
-            C.load_csv("104_ed_tables/ed_table3_family_strata.csv")}
-    # 逐值校验(与 ED Table 3 CSV 一致;theophylline 行抽样式断言)
+            C.load_csv("tables/family_strata.csv")}
+
     t = rows["theophylline_aptamer"]
     assert abs(float(t["PACoAptamer_t01"]) - 0.772161) < 1e-9
     assert abs(float(t["RhoDesign_t01"]) - 0.695495) < 1e-9
     assert abs(float(t["gRNAde_t01"]) - 0.501117) < 1e-9
     assert abs(float(t["NA-MPNN_t01"]) - 0.734659) < 1e-9
     assert abs(float(t["AlignIF_t01"]) - 0.656895) < 1e-9
-    j = C.load("91_family_strata_gfix.json")
+    j = C.load("family_stratified_recovery.json")
     for fam in ORDER:
         assert j["groups"][fam]["n_chains"] == int(rows[fam]["n"]), fam
 
@@ -58,7 +47,6 @@ def main():
     ax.legend(loc="upper right", ncol=5, columnspacing=1.0,
               handlelength=1.2, borderaxespad=0.1)
     C.save_si(fig, "family_strata")
-
 
 if __name__ == "__main__":
     main()

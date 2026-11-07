@@ -1,13 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Fig 2i | 按配体分层的恢复率优势:PACo-Aptamer − RhoDesign(t = 0.1 口径)。
-
-数据:91_family_strata_gfix.json(九个已注释家族,不含 other);
-每家族逐链配对差(t01),均值 + 链级 bootstrap 95% CI(seed 0, n=2000)。
-正值石板蓝、负值灰玫红(与 f 面板正负配色语言一致),零虚线参照;
-按优势降序排列,"8/9 家族为正"由点位直接可见。
-面板用短名,全名与链数见 Extended Data Table 3(正文引用即此口径)。
-单独运行:python fig2_i.py → out/fig2_i.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 2i | 按配体分层的恢复率优势:PACo-Aptamer − RhoDesign(t = 0.1 口径)。"""
 import numpy as np
 
 import fig2_common as C
@@ -20,9 +11,8 @@ SHORT = {
     "fam_1MMS": "1MMS", "fam_3GCA": "3GCA", "fam_8HB1": "8HB1",
 }
 
-
 def _rows():
-    d = load("91_family_strata_gfix.json")
+    d = load("family_stratified_recovery.json")
     rng = np.random.RandomState(0)
     rows = []
     for k, g in d["groups"].items():
@@ -39,7 +29,6 @@ def _rows():
     rows.sort(key=lambda r: -r[1])
     return rows
 
-
 def draw(fig, gs):
     axi = fig.add_subplot(gs[2, 2])
     panel_label(axi, "i")
@@ -47,7 +36,7 @@ def draw(fig, gs):
     n = len(rows)
     axi.axvline(0, color="#7A7672", lw=0.6, ls=":")
     for rank, (nm, mean, lo, hi) in enumerate(rows):
-        y = n - 1 - rank  # 优势最大者在最上
+        y = n - 1 - rank
         c = PACO if mean > 0 else NEG
         axi.errorbar(mean, y, xerr=[[mean - lo], [hi - mean]], fmt="o",
                      ms=3.0, color=c, ecolor=c, elinewidth=0.7,
@@ -60,7 +49,6 @@ def draw(fig, gs):
     axi.set_xticks([-5, 0, 5, 10, 15])
     axi.set_xlabel("Recovery advantage over RhoDesign,\nt = 0.1 mean (%)")
     return axi
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

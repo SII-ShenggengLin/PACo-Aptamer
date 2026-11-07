@@ -1,17 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Fig 3h | 骨架质量依赖:x = 骨架 scTM(native 预测 vs 晶体),y = predbb t = 0.1。
-
-AlignIF 与 PACo-Aptamer 双色散点 + OLS 虚线;面板内不写统计文字
-(Spearman ρ/P 由图注承载),图例置于右上空区;数据与 ED Fig. 3 同源
-(ed_common,86_sctm_gfix)。
-单独运行:python fig3_h.py → out/fig3_h.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 3h | 骨架质量依赖:x = 骨架 scTM(native 预测 vs 晶体),y = predbb t = 0.1。"""
 import numpy as np
 from scipy import stats
 
 import fig3_common as C
 from fig_style import ALIGNIF, PACO, panel_label, save
-
 
 def draw(fig, gs):
     ax = fig.add_subplot(gs[2, 2:4])
@@ -35,7 +27,6 @@ def draw(fig, gs):
     ax.set_ylim(-4, 105)
     C.tighten_ylabels(fig)
     return ax
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Fig 2d | 逐链恢复率差值的累积分布(ECDF):PACo-Aptamer 减四条基线。
-
-单格宽度。每条曲线 = 与该基线的逐链优势(PACo − 基线,正值 = PACo 更高),
-平延至右缘;曲线越晚越过 0,说明越多链上 PACo 占优(与 0 交点 = 1 − 胜率)。
-单独运行:python fig2_d.py → out/fig2_d.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 2d | 逐链恢复率差值的累积分布(ECDF):PACo-Aptamer 减四条基线。"""
 import numpy as np
 
 import fig2_common as C
@@ -12,7 +6,6 @@ from fig_style import METHOD_COLOR, panel_label, save
 
 OPPS = ["RhoDesign", "gRNAde", "NA-MPNN", "AlignIF"]
 XLIM = (-25, 72)
-
 
 def draw(fig, gs):
     axd = fig.add_subplot(gs[1, 0])
@@ -35,7 +28,6 @@ def draw(fig, gs):
     axd.legend(loc="lower right", fontsize=4.6, handlelength=1.2,
                handletextpad=0.4, borderaxespad=0.2, labelspacing=0.3)
     return axd
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

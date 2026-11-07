@@ -1,44 +1,20 @@
-# -*- coding: utf-8 -*-
-"""Supplementary Fig. 1 | 数据漏斗与三层测试集(数据集如何划分)。
-
-流程:PDB 24,252 → 纯 RNA 池 6,988 / 复合物 868(去除与测试同簇者 →
-768 链进入 stage-2 微调);CD-HIT 0.8 ∪ TM ≥ 0.45 传递闭包 → 300 等价类
-→ 簇级划分 train 5,773 / validation 96 / test 477 / independent 235 /
-unassigned 511。五个数据集与三层测试集的对应直接画出:
-test 477 = layer 1(cluster-based holdout),independent 235 = layer 2
-(time-based split),zero-shot 93 = layer 3(ligand holdout,叠加视图:
-54 来自 layer 1 + 39 来自 layer 2,配体在全部训练复合物中不可见)。
-
-几何约定(v3 重排):坐标网格 1 数据单位 = 1 mm(xlim 全宽 183 mm)。
-字号:盒内文字一律 6.0 pt(与 fig_style 的 labelsize 同档),盒外连线旁
-注释 5.2 pt(与 legend 同档),全黑不加粗。所有连接线横平竖直——主干
-箭头一律垂直,右上 PDB→复合物分解用一根水平箭头,CD-HIT 与五个划分
-盒之间用水平母线(bus)加五根垂直箭头分发。箭头端点一律由行几何变量
-(aB…fT)推导,不写死字面量:尾端从源盒可见边缘出发,尖端(TIP=0)
-落在目标可见边缘上,与边框墨迹中心重合——不悬空、不刺穿。CD-HIT 盒
-与划分盒行之间留完整标注带("class-level 8:1:1 split")。右侧原游离
-注释已删除(图题末句覆盖)。54/39 两根垂直箭头的箭头落在 layer 3 盒
-边缘之外,不被遮挡。
-单独运行:python figures/si/si_funnel.py → figures/out/si/si_funnel.{pdf,png}
-"""
+"""Supplementary Fig. 1 | 数据漏斗与三层测试集(数据集如何划分)。"""
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import si_common as C  # noqa: E402
+import si_common as C
 EDGE = "black"
 
-FS, FS_S = 6.0, 5.2   # 盒内文字 / 盒外注释(与 fig_style labelsize/legend 同档,全黑)
-PAD = 1.0             # mm;FancyBboxPatch 圆角外扩,可见边缘 = 矩形 ± PAD
-TIP = 0.0             # mm;箭头尖端越过目标可见边缘的量(0 = 正落在边缘墨迹上)
-
+FS, FS_S = 6.0, 5.2
+PAD = 1.0
+TIP = 0.0
 
 def wbox(ax, x, y, w, h, lw=0.9, dashed=False):
     from matplotlib.patches import FancyBboxPatch
     ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad={PAD}",
                                 fc="white", ec=EDGE, lw=lw,
                                 linestyle=(0, (3, 3)) if dashed else "-"))
-
 
 def arrow(ax, x0, y0, x1, y1, lw=0.8):
     """横平竖直箭头(x0==x1 垂直,y0==y1 水平),不做任何弯曲。"""
@@ -47,36 +23,31 @@ def arrow(ax, x0, y0, x1, y1, lw=0.8):
                                  mutation_scale=9, color=EDGE, lw=lw,
                                  shrinkA=0, shrinkB=0))
 
-
 def lab(ax, x, y, txt, fs=FS, ha="center"):
     ax.text(x, y, txt, fontsize=fs, color="black", ha=ha, va="center",
             linespacing=1.35)
 
-
 def main():
-    # 网格:1 单位 = 1 mm;x 全宽 183(Nature Methods 双栏),y 高 104
+
     fig, gs = C.make_canvas(104, 1, 1, left=0.0, right=1.0, top=1.0,
                             bottom=0.0)
     ax = fig.add_subplot(gs[0, 0])
     ax.set_xlim(-0.5, 182.5); ax.set_ylim(29.0, 133.0)
     ax.set_aspect("equal"); ax.axis("off")
 
-    # 行几何(mm):六行盒的盒底/盒顶;可见边缘 = 矩形 ± PAD
     aB, bB, cB, dB, eB, fB = 120.5, 103.0, 85.5, 63.4, 48.4, 34.4
     aT, bT, cT, dT, eT, fT = 130.0, 112.5, 95.0, 72.9, 57.4, 43.4
-    y_bus = 80.5                      # 母线高度
+    y_bus = 80.5
 
-    # 上方三行相对 183 mm 画布居中
     x_center = 91.5
     w_left, w_right, top_gap = 37.0, 42.0, 22.0
     x_left = x_center - (w_left + top_gap + w_right) / 2
     x_right = x_left + w_left + top_gap
     xcL, xcR = x_left + w_left / 2, x_right + w_right / 2
     w_cd = 57.0
-    xcd = x_center                    # CD-HIT 盒中心
+    xcd = x_center
     x_cd = xcd - w_cd / 2
 
-    # ---- 顶层:PDB → {纯 RNA 池, 复合物}(右上分解为水平箭头)----
     wbox(ax, x_left, aB, w_left, aT - aB)
     lab(ax, xcL, (aB + aT) / 2, "PDB entries containing RNA\n24,252")
     wbox(ax, x_right, aB, w_right, aT - aB)
@@ -96,7 +67,6 @@ def main():
         "complexes sharing a cluster with\nany test chain are excluded",
         FS_S, ha="right")
 
-    # ---- 聚类:直角连接线保持 RNA-only 与 CD-HIT 各自居中 ----
     y_elbow = (bB - PAD + cT + PAD) / 2
     ax.plot([xcL, xcL, xcd], [bB - PAD, y_elbow, y_elbow],
             color=EDGE, lw=0.8)
@@ -105,7 +75,6 @@ def main():
     lab(ax, xcd, (cB + cT) / 2, "CD-HIT 0.8 + TM \u2265 0.45\ntransitive "
                                 "closure \u2192 300 equivalence classes")
 
-    # ---- 簇级划分:水平母线 + 五根垂直箭头(标注带在母线与 CD-HIT 盒之间)----
     ax.plot([xcd, xcd], [cB - PAD, y_bus], color=EDGE, lw=0.6)
     ax.plot([19.5, 163.5], [y_bus, y_bus], color=EDGE, lw=0.6)
     lab(ax, xcd + 13.5, (y_bus + cB - PAD) / 2,
@@ -125,7 +94,6 @@ def main():
     lab(ax, 3, 59.0, "stage-1 pretraining\n(identical to baseline "
                      "retraining)", FS_S, ha="left")
 
-    # ---- 三层测试集(与五个数据集的对应:垂直接力)----
     arrow(ax, 91.5, dB - PAD, 91.5, eT + PAD + TIP)
     wbox(ax, 75.5, eB, 32, eT - eB, lw=1.1)
     lab(ax, 91.5, eB + 6.2, "layer 1")
@@ -136,7 +104,6 @@ def main():
     lab(ax, 127.5, eB + 6.2, "layer 2")
     lab(ax, 127.5, eB + 2.7, "time-based split (2024+)")
 
-    # zero-shot 叠加:L1 的 54 链 + L2 的 39 链,两根垂直箭头汇入 layer 3
     arrow(ax, 101.5, eB - PAD, 101.5, fT + PAD + TIP, lw=0.9)
     arrow(ax, 117.5, eB - PAD, 117.5, fT + PAD + TIP, lw=0.9)
     lab(ax, 99.5, (eB - PAD + fT + PAD) / 2, "54", FS_S, ha="right")
@@ -146,7 +113,6 @@ def main():
     lab(ax, 109.5, fB + 2.7, "ligand holdout (zero-shot), 93 chains")
     lab(ax, 109.5, 31.4, "ligands absent from all training complexes", FS_S)
     return fig
-
 
 if __name__ == "__main__":
     fig = main()

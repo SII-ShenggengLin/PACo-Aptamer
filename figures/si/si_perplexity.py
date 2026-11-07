@@ -1,16 +1,4 @@
-# -*- coding: utf-8 -*-
-"""SI Fig. | Native-sequence perplexity(逐链 native perplexity)。
-
-(a) 逐链 ppl_native = exp(−mean logP/nt) 小提琴 + 抖动点 + 黑色均值线,
-    4 方法(AlignIF 无 teacher-forced 打分模式,不画);
-    PACo 逐链 logp_native 取自 data/survey/77_ens2_pool_btest/*.json
-    (ens2 集成概率平均口径,analysis/25 同源),其余三方法取
-    data/survey/98_perplexity.json;宏均值逐一断言
-    (PACo 2.911 / RhoDesign 3.450 / gRNAde 3.016 / NA-MPNN 3.401)。
-(b) 逐链 Δppl(基线 − PACo-Aptamer,配对 477 链)分布直方图;
-    均值标注与图例一致(n = 477)。
-单独运行:python figures/si/si_perplexity.py → figures/out/si/si_perplexity.{pdf,png}
-"""
+"""SI Fig. | Native-sequence perplexity(逐链 native perplexity)。"""
 import glob
 import math
 import os
@@ -20,24 +8,22 @@ import numpy as np
 import si_common as C
 from fig_style import panel_label
 
-
 def _paco_ppl():
     out = {}
-    for f in glob.glob(os.path.join(C.SUR, "77_ens2_pool_btest", "*.json")):
+    for f in glob.glob(os.path.join(C.SUR, "paco_cluster_pools", "*.json")):
         stem = os.path.basename(f)[:-5]
         import json
         out[stem] = math.exp(-json.load(open(f))["logp_native"])
     return out
 
-
 def main():
-    d = C.load("98_perplexity.json")
+    d = C.load("native_perplexity.json")
     paco = _paco_ppl()
     ppl = {"PACoAptamer": paco,
            "RhoDesign": {k: v["ppl_native"] for k, v in d["RhoDesign"].items()},
            "gRNAde": {k: v["ppl_native"] for k, v in d["gRNAde"].items()},
            "NA-MPNN": {k: v["ppl_native"] for k, v in d["NA-MPNN"].items()}}
-    # 宏均值校验
+
     assert abs(np.mean(list(ppl["PACoAptamer"].values())) - 2.911) < 5e-4
     for m, ref in [("RhoDesign", 3.450), ("gRNAde", 3.016), ("NA-MPNN", 3.401)]:
         assert abs(d["macro_summary"][m]["ppl_native_macro_mean"] - ref) < 5e-4
@@ -48,7 +34,7 @@ def main():
     fig, gs = C.make_canvas(64, 1, 2, width_ratios=[1.15, 1.0],
                             wspace=0.30, left=0.075, right=0.99,
                             top=0.88, bottom=0.17)
-    # ---- (a) violin ----
+
     ax = fig.add_subplot(gs[0, 0])
     panel_label(ax, "a")
     ax.text(0.03, 0.97, "horizontal bar = macro mean (n = 477 chains)",
@@ -73,7 +59,7 @@ def main():
     ax.set_yticks([1.5, 2, 3, 4, 5, 7, 10, 15])
     ax.set_yticklabels(["1.5", "2", "3", "4", "5", "7", "10", "15"])
     ax.minorticks_off()
-    # ---- (b) Δ histogram ----
+
     ax = fig.add_subplot(gs[0, 1])
     panel_label(ax, "b")
     bins = np.linspace(-3, 8, 60)
@@ -88,7 +74,6 @@ def main():
     ax.set_ylabel("Chains")
     ax.legend(loc="upper right", fontsize=5.0, borderaxespad=0.3)
     C.save_si(fig, "perplexity")
-
 
 if __name__ == "__main__":
     main()

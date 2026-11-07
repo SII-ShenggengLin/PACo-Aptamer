@@ -1,25 +1,12 @@
-# -*- coding: utf-8 -*-
-"""SI Fig. | Inference efficiency(效率四联,6 条探针链/方法)。
-
-(a) 每链 runtime(s,ens2 口径,min–max 误差棒);(b) 每样本耗时(ms,log);
-(c) 吞吐(samples/s,log);(d) 峰值显存(GiB,均值 + min–max 区间)。
-方法名用正文全称(PACo-Aptamer);探针集差异与指示性比较的说明在
-SI 图题与 Supplementary Table 8 注记中,不画在图内。
-数据源 data/survey/99_efficiency_{PACoAptamer,AlignIF,gRNAde,NA-MPNN,
-RhoDesign}.json,逐方法汇总后与 104_ed_tables/ed_table4_efficiency.csv
-断言一致(PACo 2.77s/9.2ms/149.3/0.6–2.1GB;AlignIF 474.6ms;
-gRNAde 21.3ms;NA-MPNN 355.9ms;RhoDesign 154.7ms)。
-单独运行:python figures/si/si_efficiency.py → figures/out/si/si_efficiency.{pdf,png}
-"""
+"""SI Fig. | Inference efficiency(效率四联,6 条探针链/方法)。"""
 import numpy as np
 
 import si_common as C
 from fig_style import panel_label
 
-
 def _metrics():
     m = {}
-    d = C.load("99_efficiency_PACoAptamer.json")["per_chain"]
+    d = C.load("efficiency_PACoAptamer.json")["per_chain"]
     v = list(d.values())
     m["PACoAptamer"] = dict(
         wall=np.mean([x["ens2"]["wall_s"] for x in v]),
@@ -30,7 +17,7 @@ def _metrics():
         mem_hi=max(x["ens2"]["peak_mem_mb"] for x in v),
         wall_lo=min(x["ens2"]["wall_s"] for x in v),
         wall_hi=max(x["ens2"]["wall_s"] for x in v))
-    d = C.load("99_efficiency_AlignIF.json")["per_chain"]
+    d = C.load("efficiency_AlignIF.json")["per_chain"]
     v = list(d.values())
     m["AlignIF"] = dict(
         wall=np.mean([x["wall_s"] for x in v]),
@@ -40,7 +27,7 @@ def _metrics():
         mem_lo=min(x["peak_mem_mb_approx"] for x in v),
         mem_hi=max(x["peak_mem_mb_approx"] for x in v),
         wall_lo=min(x["wall_s"] for x in v), wall_hi=max(x["wall_s"] for x in v))
-    d = C.load("99_efficiency_gRNAde.json")["records"]
+    d = C.load("efficiency_gRNAde.json")["records"]
     gw = sum(x["wall_s"] for x in d)
     gn = sum(3 * x["n_samples_per_temp"] for x in d)
     m["gRNAde"] = dict(
@@ -51,7 +38,7 @@ def _metrics():
         mem_lo=min(x["gpu_mem_peak_mib"] for x in d),
         mem_hi=max(x["gpu_mem_peak_mib"] for x in d),
         wall_lo=min(x["wall_s"] for x in d), wall_hi=max(x["wall_s"] for x in d))
-    d = C.load("99_efficiency_NA-MPNN.json")["records"]
+    d = C.load("efficiency_NA-MPNN.json")["records"]
     nw = sum(x["wall_s"] for x in d)
     m["NA-MPNN"] = dict(
         wall=np.mean([x["wall_s"] for x in d]),
@@ -61,7 +48,7 @@ def _metrics():
         mem_lo=min(x["gpu_mem_peak_mib_polling"] for x in d),
         mem_hi=max(x["gpu_mem_peak_mib_polling"] for x in d),
         wall_lo=min(x["wall_s"] for x in d), wall_hi=max(x["wall_s"] for x in d))
-    d = C.load("99_efficiency_RhoDesign.json")["probes"]
+    d = C.load("efficiency_RhoDesign.json")["probes"]
     v = list(d.values())
     nsamp = lambda x: 3 * x["n_per_temp"]
     rw = sum(x["wall_time_s"] for x in v)
@@ -77,10 +64,9 @@ def _metrics():
         wall_hi=max(x["wall_time_s"] for x in v))
     return m
 
-
 def _assert_vs_csv(m):
     rows = {r["method"]: r for r in
-            C.load_csv("104_ed_tables/ed_table4_efficiency.csv")}
+            C.load_csv("tables/efficiency.csv")}
     for k, r in rows.items():
         assert abs(m[k]["wall"] - float(r["wall_s_per_chain_mean"])) < 5e-3, k
         assert abs(m[k]["ms"] - float(r["ms_per_sample"])) < 0.06, k
@@ -89,11 +75,9 @@ def _assert_vs_csv(m):
         assert abs(m[k]["mem_lo"] - float(r["peak_mem_mb_min"])) < 0.15, k
         assert abs(m[k]["mem_hi"] - float(r["peak_mem_mb_max"])) < 0.15, k
 
-
 def _name(m):
     """完整方法名(与正文一致,PACo 用全称 PACo-Aptamer)。"""
     return "PACo-Aptamer" if m == "PACoAptamer" else m
-
 
 def _panel(ax, letter, vals, order, ylab, fmt, log=False, ranges=None,
            scale=1.0):
@@ -129,7 +113,6 @@ def _panel(ax, letter, vals, order, ylab, fmt, log=False, ranges=None,
                      for m, v in zip(order, [vals[m] for m in order]))
         ax.set_ylim(0, max(max(v), hi_all) * 1.18)
 
-
 def main():
     m = _metrics()
     _assert_vs_csv(m)
@@ -152,7 +135,6 @@ def main():
            ranges={k: (v["mem_lo"] / 1024, v["mem_hi"] / 1024)
                    for k, v in m.items()})
     C.save_si(fig, "efficiency")
-
 
 if __name__ == "__main__":
     main()

@@ -1,16 +1,9 @@
-# -*- coding: utf-8 -*-
-"""Fig 4h | recovery-matched 负对照逐链 scTM 差分布:scTM(PACo) − scTM(control)。
-
-2026-10-22 起删除面板内统计角标与释义文字(均值/CI/P 值由正文与图注承载);
-灰色点线为零、黑色虚线为均值,两条参考线入图例(置于空左尾)。
-单独运行:python fig4_h.py → out/fig4_h.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 4h | recovery-matched 负对照逐链 scTM 差分布:scTM(PACo) − scTM(control)。"""
 import numpy as np
 from matplotlib.lines import Line2D
 
 import fig4_common as C
 from fig_style import PACO, panel_label, save
-
 
 def draw(fig, gs):
     ax = fig.add_subplot(gs[2, 1])
@@ -30,7 +23,6 @@ def draw(fig, gs):
     ax.set_xlabel("Advantage over recovery-matched\nrandom control (%)")
     ax.set_ylabel("Chains")
     return ax
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()

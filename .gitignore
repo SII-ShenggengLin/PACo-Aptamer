@@ -1,52 +1,54 @@
-# macOS
-.DS_Store
-**/.DS_Store
-
-# Python bytecode
-**/__pycache__/
-**/*.pyc
-**/*.pyo
+# Python
+__pycache__/
+*.py[cod]
 *.egg-info/
 .pytest_cache/
 
-# IDE / editor
+# Editors and operating systems
+.DS_Store
 .vscode/
 .idea/
 *.swp
-*.swo
 *~
 
-# ── Bulk data (raw PDB/CIF and derived sets — Zenodo release, see README) ──
-data/*
-!data/*.py
-!data/*.sh
-!data/splits_v2/
-
-# ── Model weights / checkpoints (~14G — managed outside git) ──
-models/
-*.pt
-*.pth
-*.ckpt
-*.safetensors
-
-# ── Third-party tool repos cloned with their own git remotes (see README for URLs) ──
-tools/*
-!tools/PACoAptamer/
-!tools/USalign/
-
-# ── Scratch space ──
+# Local research material is not part of the public release
+.claude/
+CLAUDE.md
+analysis/
+attic_v1_scripts_20260819/
+references/
+paper/
+PPT/
+月报告/
 tmp/
+arnie_file.txt
+dot.ps
+dot2.ps
 
-# Environment / secrets
-.env
+# Data, weights and third-party source trees are distributed separately
+data/
+models/
+tools/
+zenodo_deposit/
 
-# Logs
+# Generated outputs
+outputs/
+figures/out/
 *.log
 
-# Local agent / machine config
-.claude/
+# Development and asset-generation scripts
+figures/attic*/
+figures/fig1/assets/
+figures/fig1/fig1_assets_data.py
+figures/fig1/fig1_pymol.py
+figures/fig4/fig4_audit.py
+figures/fig6/fig6_audit.py
+figures/fig6/fig6_gallery_pymol.py
+figures/fig6/fig6_pymol.py
+figures/fig6/fig6_trim.py
 
-# Conda / virtualenv
+# Environments and credentials
+.env
 .conda/
 .venv/
 venv/

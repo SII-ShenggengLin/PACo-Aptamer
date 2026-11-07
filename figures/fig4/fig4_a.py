@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-"""Fig 4a | 消融哑铃图:每变体一对点(全局 best / 界面 best),灰线相连。
-
-2026-10-22 起由表格改为图(同图类型多样化;表格脚注文字全部删除,
-口径说明移入图注)。口径编码沿用全图惯例:实心点 = 全局(477 测试链),
-半透明点 = 界面(115 条 <5 Å 界面链);数值标在点旁,不加粗。
-x 轴 60–90% 放大,使单模型家族 0.6–0.8% 的全局差异可读。
-单独运行:python fig4_a.py → out/fig4_a.{pdf,png}(与拼合版物理尺寸一致)
-"""
+"""Fig 4a | 消融哑铃图:每变体一对点(全局 best / 界面 best),灰线相连。"""
 import numpy as np
 from matplotlib.lines import Line2D
 
@@ -19,11 +11,10 @@ ROWS = [("Full model", "baseline"),
         ("− augmentation", "no_aug"),
         ("− ligand context", "no_ligand")]
 
-
 def draw(fig, gs):
     axa = fig.add_subplot(gs[0, 0])
     panel_label(axa, "a")
-    ys = np.arange(len(ROWS))[::-1]          # Full model 在最上
+    ys = np.arange(len(ROWS))[::-1]
     for y, (_, key) in zip(ys, ROWS):
         r = C.P00[key]
         g = 100 * r["global_best_477"]
@@ -40,7 +31,7 @@ def draw(fig, gs):
     axa.set_ylim(-0.5, 5.15)
     axa.set_xticks([60, 65, 70, 75, 80, 85, 90])
     axa.set_xlabel("Recovery, best sample per chain (%)")
-    # 双行单列图例置于顶部空带(6 pt 下单行双列宽约 52 mm 超出面板)
+
     axa.legend(handles=[
         Line2D([], [], marker="o", ls="none", ms=4.2, markerfacecolor="0.25",
                markeredgecolor="none", label="global (filled)"),
@@ -50,7 +41,6 @@ def draw(fig, gs):
         loc="upper left", fontsize=6.0, handlelength=1.2,
         handletextpad=0.4, borderaxespad=0.2, labelspacing=0.35)
     return axa
-
 
 if __name__ == "__main__":
     fig, gs = C.make_canvas()
