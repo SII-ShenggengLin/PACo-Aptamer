@@ -1,6 +1,6 @@
 # PACo-Aptamer
 
-PACo-Aptamer is a ligand-conditioned RNA inverse-folding model. This repository contains the final model, command-line tools and figure-reproduction code. The corresponding data and model checkpoints are available from [Zenodo](https://doi.org/10.5281/zenodo.24005533) under CC BY 4.0; source code is under the MIT License.
+PACo-Aptamer is a ligand-conditioned RNA inverse-folding model. This repository contains the final model, command-line tools and figure-reproduction code. The corresponding data and model checkpoints are available from [Zenodo](https://doi.org/10.5281/zenodo.24005531) under CC BY 4.0; source code is under the MIT License.
 
 ## Installation
 
